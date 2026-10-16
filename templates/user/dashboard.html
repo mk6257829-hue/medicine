@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+  <aside class="dashboard-sidebar" id="dashSidebar">
+    <div class="dash-sidebar-brand">
+      <div class="brand-icon brand-icon-sm"><i class="bi bi-capsule-pill"></i></div>
+      <span class="fw-700">Medi<span class="brand-accent">Find</span></span>
+    </div>
+
+    <!-- User info -->
+    <div class="dash-user-card">
+      <div class="dash-user-avatar" id="sidebarAvatar">U</div>
+      <div class="flex-fill overflow-hidden">
+        <div class="fw-600 text-truncate" id="sidebarName">User</div>
+        <div class="small text-muted text-truncate" id="sidebarEmail">user@example.com</div>
+      </div>
+    </div>
+
+    <nav class="dash-nav">
+      <a href="/dashboard"      class="dash-nav-link active" id="navDashboard">
+        <i class="bi bi-grid"></i><span>Dashboard</span>
+      </a>
+      <a href="/search"         class="dash-nav-link" id="navSearch">
+        <i class="bi bi-search"></i><span>Find Medicine</span>
+      </a>
+      <a href="/availability"   class="dash-nav-link" id="navAvail">
+        <i class="bi bi-geo-alt"></i><span>Nearby Availability</span>
+      </a>
+      <a href="/prescriptions"  class="dash-nav-link" id="navPrescriptions">
+        <i class="bi bi-file-medical"></i><span>Prescriptions</span>
+        <span class="dash-nav-badge" id="rxBadge" style="display:none;">0</span>
+      </a>
+      <a href="/orders"         class="dash-nav-link" id="navOrders">
+        <i class="bi bi-bag"></i><span>My Orders</span>
+        <span class="dash-nav-badge" id="ordBadge" style="display:none;">0</span>
+      </a>
+      <a href="/notifications"  class="dash-nav-link" id="navNotifs">
+        <i class="bi bi-bell"></i><span>Notifications</span>
+      </a>
+      <div class="dash-nav-divider"></div>
+      <a href="/profile"        class="dash-nav-link" id="navProfile">
+        <i class="bi bi-person-gear"></i><span>Profile</span>
+      </a>
+      <button class="dash-nav-link text-danger border-0 bg-transparent w-100 text-start" id="dashLogoutBtn">
+        <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="dashboard-main" id="dashMain">
+
+    <!-- Top bar -->
+    <div class="dash-topbar">
+      <button class="dash-menu-toggle d-lg-none" id="sidebarToggle" aria-label="Toggle menu">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="dash-topbar-title" id="pageTitle">Dashboard</div>
+      <div class="dash-topbar-right">
+        <button class="dash-icon-btn" id="topbarNotifBtn" aria-label="Notifications">
+          <i class="bi bi-bell"></i>
+          <span class="dash-icon-badge d-none" id="notifDot"></span>
+        </button>
+        <a href="/search" class="btn btn-primary btn-sm">
+          <i class="bi bi-search me-1"></i>Find Medicine
+        </a>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="dash-content" id="dashContent">
+
+      <!-- Welcome banner -->
+      <div class="dash-welcome-banner mb-4">
+        <div>
+          <div class="text-muted small">Good evening 👋</div>
+          <h2 class="fw-700 mb-0 mt-1" id="welcomeName">Welcome back, User!</h2>
+        </div>
+        <a href="/search" class="btn btn-primary btn-sm d-none d-sm-inline-flex align-items-center gap-2">
+          <i class="bi bi-capsule"></i> Find a Medicine
+        </a>
+      </div>
+
+      <!-- Stats row -->
+      <div class="row g-3 mb-4" id="dashStatsRow">
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-blue">
+            <div class="dash-stat-icon"><i class="bi bi-bag"></i></div>
+            <div class="dash-stat-val" id="statOrders">—</div>
+            <div class="dash-stat-label">Total Orders</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-green">
+            <div class="dash-stat-icon"><i class="bi bi-file-medical"></i></div>
+            <div class="dash-stat-val" id="statRx">—</div>
+            <div class="dash-stat-label">Prescriptions</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-orange">
+            <div class="dash-stat-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="dash-stat-val" id="statPending">—</div>
+            <div class="dash-stat-label">Pending Orders</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-purple">
+            <div class="dash-stat-icon"><i class="bi bi-bookmark"></i></div>
+            <div class="dash-stat-val" id="statSaved">—</div>
+            <div class="dash-stat-label">Saved Medicines</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two column -->
+      <div class="row g-4">
+        <!-- Recent orders -->
+        <div class="col-lg-7">
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <span class="fw-600">Recent Orders</span>
+              <a href="/orders" class="btn btn-sm btn-link p-0">View all →</a>
+            </div>
+            <div id="recentOrdersList">
+              <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="col-lg-5">
+          <div class="dash-card mb-4">
+            <div class="dash-card-header"><span class="fw-600">Quick Actions</span></div>
+            <div class="d-flex flex-column gap-2 p-3">
+              <a href="/search" class="dash-quick-btn">
+                <i class="bi bi-search text-primary"></i>
+                <div>
+                  <div class="fw-600 small">Search Medicine</div>
+                  <div class="text-muted" style="font-size:.75rem;">Find availability nearby</div>
+                </div>
+                <i class="bi bi-chevron-right ms-auto text-muted"></i>
+              </a>
+              <a href="/prescriptions" class="dash-quick-btn">
+                <i class="bi bi-file-medical text-success"></i>
+                <div>
+                  <div class="fw-600 small">Upload Prescription</div>
+                  <div class="text-muted" style="font-size:.75rem;">Digital Rx management</div>
+                </div>
+                <i class="bi bi-chevron-right ms-auto text-muted"></i>
+              </a>
+              <a href="/availability" class="dash-quick-btn">
+                <i class="bi bi-geo-alt text-warning"></i>
+                <div>
+                  <div class="fw-600 small">Check Nearby Pharmacies</div>
+                  <div class="text-muted" style="font-size:.75rem;">Real-time availability map</div>
+                </div>
+                <i class="bi bi-chevron-right ms-auto text-muted"></i>
+              </a>
+              <a href="/orders" class="dash-quick-btn">
+                <i class="bi bi-bag text-info"></i>
+                <div>
+                  <div class="fw-600 small">Track My Orders</div>
+                  <div class="text-muted" style="font-size:.75rem;">Live order status</div>
+                </div>
+                <i class="bi bi-chevron-right ms-auto text-muted"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Health tip card -->
+          <div class="dash-card">
+            <div class="dash-card-header"><span class="fw-600">💊 Health Tip of the Day</span></div>
+            <div class="p-3">
+              <p class="text-muted small mb-2" id="healthTip">
+                Always complete your antibiotic course even if you feel better. Stopping early can lead to antibiotic resistance.
+              </p>
+              <button class="btn btn-sm btn-outline-primary" id="nextTipBtn">Next tip →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
+
+  /* ── Auth Guard ───────────────────────────────────────────────────── */
+  const user = (() => { try { return JSON.parse(localStorage.getItem('mf_user') || 'null'); } catch { return null; } })();
+  // Uncomment in production to guard: if (!user) { window.location.href = '/login'; return; }
+
+  /* ── Sidebar ────────────────────────────────────────────────────── */
+  const sidebar  = document.getElementById('dashSidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+  });
+  overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+
+  /* ── User info ───────────────────────────────────────────────────── */
+  if (user) {
+    const name = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User';
+    document.getElementById('sidebarAvatar').textContent = name[0].toUpperCase();
+    document.getElementById('sidebarName').textContent   = name;
+    document.getElementById('sidebarEmail').textContent  = user.email || '';
+    document.getElementById('welcomeName').textContent   = `Welcome back, ${user.first_name || 'User'}!`;
+  }
+
+  /* ── Active nav ───────────────────────────────────────────────────── */
+  document.querySelectorAll('.dash-nav-link').forEach(link => {
+    if (link.href && window.location.pathname === new URL(link.href, location.origin).pathname) {
+      link.classList.add('active');
+    }
+  });
+
+  /* ── Load stats ──────────────────────────────────────────────────── */
+  async function loadStats() {
+    const token = localStorage.getItem('mf_access');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    try {
+      const res = await fetch('/api/users/dashboard', { headers }).then(r => r.json());
+      if (res.success && res.data) {
+        const d = res.data;
+        document.getElementById('statOrders').textContent  = d.total_orders  ?? 0;
+        document.getElementById('statRx').textContent      = d.prescriptions  ?? 0;
+        document.getElementById('statPending').textContent = d.pending_orders ?? 0;
+        document.getElementById('statSaved').textContent   = d.saved_medicines?? 0;
+        return;
+      }
+    } catch (_) {}
+    // Demo values
+    document.getElementById('statOrders').textContent  = 3;
+    document.getElementById('statRx').textContent      = 2;
+    document.getElementById('statPending').textContent = 1;
+    document.getElementById('statSaved').textContent   = 8;
+  }
+
+  /* ── Recent orders ────────────────────────────────────────────────── */
+  function renderOrders(orders) {
+    const statusMap = {
+      pending:   ['bg-warning-subtle text-warning',  'Pending'],
+      confirmed: ['bg-primary-subtle text-primary',  'Confirmed'],
+      dispatched:['bg-info-subtle text-info',         'Dispatched'],
+      delivered: ['bg-success-subtle text-success',   'Delivered'],
+      cancelled: ['bg-danger-subtle text-danger',     'Cancelled'],
+    };
+    if (!orders.length) {
+      return '<div class="text-center py-4 text-muted small"><i class="bi bi-bag fs-2 d-block mb-2 opacity-25"></i>No orders yet. <a href="/medicines">Browse medicines</a></div>';
+    }
+    return `<table class="table table-hover mb-0">
+      <thead><tr class="small text-muted">
+        <th>Order ID</th><th>Medicine</th><th>Date</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+      ${orders.map(o => {
+        const [cls, label] = statusMap[o.status] || ['bg-secondary-subtle text-secondary', o.status];
+        return `<tr>
+          <td class="small fw-600 text-primary">#${o._id?.slice(-6) || '000001'}</td>
+          <td class="small">${o.medicine_name || 'Medicine'}</td>
+          <td class="small text-muted">${o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN') : '25 Sep 2026'}</td>
+          <td><span class="badge ${cls}">${label}</span></td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  async function loadOrders() {
+    const token = localStorage.getItem('mf_access');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    try {
+      const res = await fetch('/api/orders?limit=5', { headers }).then(r => r.json());
+      document.getElementById('recentOrdersList').innerHTML = renderOrders(res.data || res.orders || []);
+      return;
+    } catch (_) {}
+    // Demo
+    document.getElementById('recentOrdersList').innerHTML = renderOrders([
+      { _id: 'ord001', medicine_name: 'Paracetamol 500mg', status: 'delivered' },
+      { _id: 'ord002', medicine_name: 'Amoxicillin 250mg', status: 'pending' },
+      { _id: 'ord003', medicine_name: 'Vitamin D3 1000IU', status: 'confirmed' },
+    ]);
+  }
+
+  /* ── Health tips ─────────────────────────────────────────────────── */
+  const tips = [
+    'Always complete your antibiotic course even if you feel better. Stopping early can lead to antibiotic resistance.',
+    'Store medicines at room temperature away from direct sunlight, heat, and moisture.',
+    'Never share prescription medicines with others — what works for one person can be dangerous for another.',
+    'Check expiry dates regularly and safely dispose of expired medicines.',
+    'Drink a full glass of water when taking most oral medicines unless instructed otherwise.',
+  ];
+  let tipIdx = 0;
+  document.getElementById('nextTipBtn')?.addEventListener('click', () => {
+    tipIdx = (tipIdx + 1) % tips.length;
+    document.getElementById('healthTip').textContent = tips[tipIdx];
+  });
+
+  /* ── Logout ─────────────────────────────────────────────────────── */
+  document.getElementById('dashLogoutBtn')?.addEventListener('click', () => {
+    localStorage.removeItem('mf_access');
+    localStorage.removeItem('mf_refresh');
+    localStorage.removeItem('mf_user');
+    window.location.href = '/login';
+  });
+
+  loadStats();
+  loadOrders();
+})();
+</script>
+{% endblock %}

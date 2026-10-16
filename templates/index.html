@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block title %}Find Your Medicine — Nearby Pharmacy Network{% endblock %}
+{% block meta_description %}Search medicine availability at nearby pharmacies. Find medicines by name, check real-time stock, and reserve from verified pharmacies near you.{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HERO SECTION
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="hero-section" id="hero" aria-label="Search for medicines">
+  <div class="container position-relative">
+    <div class="row align-items-center g-5">
+
+      <!-- Left: Content -->
+      <div class="col-lg-6">
+        <div class="hero-badge" aria-label="Platform status">
+          <span class="badge-dot"></span>
+          Trusted by 500+ Pharmacies
+        </div>
+
+        <h1 class="hero-title">
+          Find Your Medicine.<br>
+          Find Your <span class="highlight">Pharmacy.</span>
+        </h1>
+        <p class="hero-subtitle">
+          Search medicine availability at nearby pharmacies quickly and conveniently.
+          Real-time stock, verified pharmacies, and easy reservations.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="mt-4" style="max-width:560px; position:relative;">
+          <div class="search-bar-wrap">
+            <i class="bi bi-search text-muted me-2 d-none d-sm-flex"></i>
+            <input
+              type="text"
+              id="heroSearchInput"
+              class="search-bar-input"
+              placeholder="Search medicine, brand or generic name…"
+              autocomplete="off"
+              aria-label="Search medicines"
+              aria-autocomplete="list"
+              aria-controls="searchDropdown"
+            />
+            <button class="search-bar-btn" id="heroSearchBtn" aria-label="Search">
+              <i class="bi bi-search"></i>
+              <span>Search</span>
+            </button>
+          </div>
+          <!-- Autocomplete -->
+          <div id="searchDropdown" class="autocomplete-dropdown d-none" role="listbox"></div>
+        </div>
+
+        <!-- Quick action buttons -->
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          <a href="/medicines" class="btn btn-outline-primary px-4 py-2">
+            <i class="bi bi-capsule me-2"></i>Browse All Medicines
+          </a>
+          <button class="btn btn-secondary-custom px-4 py-2" id="nearbyPharmaciesBtn">
+            <i class="bi bi-geo-alt me-2"></i>Find Nearby Pharmacies
+          </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="hero-stats" id="heroStats">
+          <div class="hero-stat-item">
+            <div class="hero-stat-value" data-counter="10000" id="ctr-meds">0</div>
+            <div class="hero-stat-label">Medicines Listed</div>
+          </div>
+          <div class="hero-stat-item">
+            <div class="hero-stat-value" data-counter="500" id="ctr-pharm">0</div>
+            <div class="hero-stat-label">Verified Pharmacies</div>
+          </div>
+          <div class="hero-stat-item">
+            <div class="hero-stat-value" data-counter="50000" id="ctr-orders">0</div>
+            <div class="hero-stat-label">Orders Fulfilled</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Visual -->
+      <div class="col-lg-6 hero-visual d-none d-lg-flex">
+        <div style="position:relative; width:100%; max-width:480px; margin:0 auto;">
+          <!-- Main illustration card -->
+          <div class="med-card p-4" style="border-radius:24px; box-shadow: 0 24px 64px rgba(26,86,219,.18);">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div style="width:48px;height:48px;background:linear-gradient(135deg,#1a56db,#0d9488);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem;">
+                <i class="bi bi-hospital"></i>
+              </div>
+              <div>
+                <div class="fw-700 text-sm-custom">Medicine Availability</div>
+                <div class="text-muted" style="font-size:.8rem;">Real-time Stock Updates</div>
+              </div>
+              <div class="ms-auto status-badge in-stock"><i class="bi bi-circle-fill" style="font-size:.4rem;"></i> Live</div>
+            </div>
+
+            <!-- Medicine items -->
+            <div class="d-flex flex-column gap-2">
+              {% set demo_meds = [
+                ('Paracetamol 650mg', 'Tablet', 'In Stock', '₹12', 'in-stock', 'bi-capsule'),
+                ('Amoxicillin 500mg', 'Capsule', 'In Stock', '₹85', 'in-stock', 'bi-capsule-pill'),
+                ('Metformin 500mg',   'Tablet', 'Low Stock', '₹30', 'low-stock', 'bi-capsule'),
+                ('Atorvastatin 10mg', 'Tablet', 'In Stock', '₹55', 'in-stock', 'bi-capsule-pill'),
+              ] %}
+              {% for name, form, status, price, cls, icon in demo_meds %}
+              <div class="d-flex align-items-center gap-3 p-2 rounded-3" style="background:var(--clr-bg);">
+                <div style="width:36px;height:36px;background:var(--clr-primary-50);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;color:var(--clr-primary);flex-shrink:0;">
+                  <i class="bi {{ icon }}"></i>
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                  <div class="fw-600" style="font-size:.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ name }}</div>
+                  <div class="text-muted" style="font-size:.75rem;">{{ form }}</div>
+                </div>
+                <div class="text-end flex-shrink-0">
+                  <div class="status-badge {{ cls }}" style="font-size:.7rem;padding:.2rem .5rem;">{{ status }}</div>
+                  <div class="fw-700 mt-1" style="font-size:.875rem;color:var(--clr-primary);">{{ price }}</div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between">
+              <span class="text-muted" style="font-size:.8125rem;"><i class="bi bi-clock me-1"></i>Updated 2 min ago</span>
+              <a href="/medicines" class="btn btn-primary btn-sm px-3">View All</a>
+            </div>
+          </div>
+
+          <!-- Floating cards -->
+          <div class="hero-floating-card" style="bottom:-20px;left:-30px;">
+            <i class="bi bi-shop text-secondary" style="font-size:1.1rem;"></i>
+            <div>
+              <div class="fw-700" style="font-size:.8rem;">ABC Pharmacy</div>
+              <div class="text-muted" style="font-size:.7rem;">1.2 km away</div>
+            </div>
+          </div>
+
+          <div class="hero-floating-card" style="top:-20px;right:-30px;">
+            <i class="bi bi-check-circle-fill text-success" style="font-size:1.1rem;"></i>
+            <div>
+              <div class="fw-700" style="font-size:.8rem;">Verified</div>
+              <div class="text-muted" style="font-size:.7rem;">Pharmacy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     STATS BANNER
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="stats-section" aria-label="Platform statistics">
+  <div class="container">
+    <div class="row g-4 text-center">
+      <div class="col-6 col-md-3">
+        <div class="stat-value" data-counter="10000" id="st1">10,000+</div>
+        <div class="stat-label">Medicines Listed</div>
+      </div>
+      <div class="d-none d-md-block col-md-auto stat-divider"></div>
+      <div class="col-6 col-md-3">
+        <div class="stat-value" data-counter="500" id="st2">500+</div>
+        <div class="stat-label">Verified Pharmacies</div>
+      </div>
+      <div class="d-none d-md-block col-md-auto stat-divider"></div>
+      <div class="col-6 col-md-3">
+        <div class="stat-value" data-counter="25">25+</div>
+        <div class="stat-label">Cities Covered</div>
+      </div>
+      <div class="d-none d-md-block col-md-auto stat-divider"></div>
+      <div class="col-6 col-md-3">
+        <div class="stat-value" data-counter="50000">50K+</div>
+        <div class="stat-label">Successful Orders</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="how-it-works-section" id="how-it-works" aria-labelledby="howItWorksHeading">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-label">Simple Process</span>
+      <h2 class="section-title" id="howItWorksHeading">How It Works</h2>
+      <p class="section-subtitle mx-auto mt-2">Find, check availability, and reserve medicines from verified pharmacies in just a few steps.</p>
+    </div>
+
+    <div class="row g-4">
+      {% set steps = [
+        ('bi-search', 'Search Medicine', 'Enter the brand name, generic name, or composition. Our smart search handles partial matches.', '01'),
+        ('bi-shop', 'Find Nearby Pharmacies', 'See verified pharmacies that have your medicine in stock, sorted by distance from your location.', '02'),
+        ('bi-check2-circle', 'Check Availability', 'View real-time stock status, price, batch info, and expiry details for each pharmacy.', '03'),
+        ('bi-bag-check', 'Reserve & Pickup', 'Reserve your medicine online and pick it up from the pharmacy at your convenience.', '04'),
+      ] %}
+      {% for icon, title, desc, step_no in steps %}
+      <div class="col-sm-6 col-lg-3" data-animate>
+        <div class="how-step-card h-100">
+          <div class="step-number">{{ step_no }}</div>
+          <div class="step-icon-wrap">
+            <i class="bi {{ icon }}"></i>
+          </div>
+          <h3 class="fw-700 fs-6 mb-2">{{ title }}</h3>
+          <p class="text-muted" style="font-size:.875rem;line-height:1.65;">{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     POPULAR MEDICINES
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section-pad" id="popular-medicines" style="background:var(--clr-bg);" aria-labelledby="popularMedsHeading">
+  <div class="container">
+    <div class="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-3">
+      <div>
+        <span class="section-label">Quick Access</span>
+        <h2 class="section-title" id="popularMedsHeading">Popular Medicines</h2>
+      </div>
+      <a href="/medicines" class="btn btn-ghost px-4">View All <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+
+    <!-- Category filters -->
+    <div class="d-flex flex-wrap gap-2 mb-4" id="medCategoryFilter" role="tablist" aria-label="Medicine categories">
+      {% set categories = ['All', 'Analgesic', 'Antibiotic', 'Antidiabetic', 'Cardiac', 'Vitamins'] %}
+      {% for cat in categories %}
+      <button
+        class="btn btn-sm {% if cat == 'All' %}btn-primary{% else %}btn-ghost{% endif %}"
+        data-category="{{ cat }}"
+        role="tab"
+        aria-selected="{{ 'true' if cat == 'All' else 'false' }}"
+        onclick="filterMedsByCategory(this)"
+      >{{ cat }}</button>
+      {% endfor %}
+    </div>
+
+    <!-- Medicine cards grid -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4" id="popularMedsGrid">
+      <!-- Populated by JS -->
+      <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     NEARBY PHARMACIES (Location-aware)
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section-pad" id="nearby-pharmacies" style="background:var(--clr-surface);" aria-labelledby="nearbyPharmHeading">
+  <div class="container">
+    <div class="d-flex align-items-end justify-content-between mb-4 flex-wrap gap-3">
+      <div>
+        <span class="section-label">Around You</span>
+        <h2 class="section-title" id="nearbyPharmHeading">Nearby Pharmacies</h2>
+      </div>
+      <button class="btn btn-outline-primary px-4" id="detectLocationBtn">
+        <i class="bi bi-geo-alt-fill me-2"></i>Use My Location
+      </button>
+    </div>
+
+    <!-- Location permission prompt -->
+    <div id="locationPrompt" class="p-4 mb-4 rounded-3 text-center" style="background:var(--clr-primary-50);border:1px solid var(--clr-primary-100);">
+      <i class="bi bi-geo-alt" style="font-size:2.5rem;color:var(--clr-primary);"></i>
+      <p class="mt-2 mb-3 text-muted">Allow location access to find pharmacies near you, or search by pincode.</p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <button class="btn btn-primary px-4" id="allowLocationBtn">
+          <i class="bi bi-geo-alt-fill me-2"></i>Allow Location
+        </button>
+        <div class="d-flex align-items-center gap-2">
+          <input type="text" id="pincodeInput" class="form-control" placeholder="Enter Pincode" style="width:150px;" maxlength="6" aria-label="Enter pincode" />
+          <button class="btn btn-outline-primary" id="pincodeSearchBtn">Search</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pharmacy cards -->
+    <div class="row g-4" id="nearbyPharmaciesGrid">
+      <!-- Populated by JS on location grant -->
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="/pharmacies" class="btn btn-outline-primary px-5">
+        View All Pharmacies <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PHARMACY NETWORK (static showcase)
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section-pad" style="background:var(--clr-bg);" aria-labelledby="pharmNetworkHeading">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-label">Verified Network</span>
+      <h2 class="section-title" id="pharmNetworkHeading">Our Pharmacy Network</h2>
+      <p class="section-subtitle mx-auto mt-2">Every pharmacy on MediFind is verified for license, quality, and compliance before being listed.</p>
+    </div>
+
+    <div class="row g-4" id="featuredPharmaciesGrid">
+      <!-- Populated by JS -->
+      <div class="col-12 text-center py-4">
+        <div class="spinner-border text-secondary" role="status">
+          <span class="visually-hidden">Loading…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pharmacy registration CTA -->
+    <div class="mt-5 p-4 p-lg-5 rounded-4 text-center"
+         style="background:linear-gradient(135deg,var(--clr-primary-50),var(--clr-secondary-50));border:1px solid var(--clr-primary-100);">
+      <i class="bi bi-shop-window" style="font-size:2.5rem;color:var(--clr-primary);"></i>
+      <h3 class="fw-700 mt-3 mb-2">Are You a Pharmacy Owner?</h3>
+      <p class="text-muted mb-4">Join our network. Register your pharmacy, manage inventory, and reach thousands of patients.</p>
+      <a href="/register" class="btn btn-primary px-5 py-2">
+        Register Your Pharmacy <i class="bi bi-arrow-right ms-2"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     WHY CHOOSE US
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section-pad" style="background:var(--clr-surface);" aria-labelledby="whyChooseHeading">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-5">
+        <span class="section-label">Why MediFind</span>
+        <h2 class="section-title" id="whyChooseHeading">Built for Patients,<br>Designed for Pharmacies.</h2>
+        <p class="section-subtitle mt-3">
+          We bridge the gap between patients and pharmacies with real-time inventory data,
+          verified pharmacy listings, and a seamless reservation experience.
+        </p>
+        <div class="d-flex gap-3 mt-4">
+          <a href="/register" class="btn btn-primary px-4">Get Started Free</a>
+          <a href="/about" class="btn btn-ghost px-4">Learn More</a>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="row g-3">
+          {% set features = [
+            ('bi-lightning-charge-fill', 'Real-Time Availability', 'Stock updates as pharmacies add or sell medicines. No more guessing.'),
+            ('bi-shield-check-fill', 'Verified Pharmacies', 'Every pharmacy is verified for license before appearing in search results.'),
+            ('bi-geo-alt-fill', 'Location-Based Search', 'Find the nearest pharmacies within your preferred radius using GPS.'),
+            ('bi-file-medical-fill', 'Prescription Management', 'Upload prescriptions securely. Pharmacists review and approve digitally.'),
+            ('bi-bell-fill', 'Stock Alerts', 'Get notified when a medicine restocks at a pharmacy near you.'),
+            ('bi-lock-fill', 'Secure & Private', 'Your health data and prescriptions are stored securely and privately.'),
+          ] %}
+          {% for icon, title, desc in features %}
+          <div class="col-md-6" data-animate>
+            <div class="feature-card">
+              <div class="feature-icon-wrap"><i class="bi {{ icon }}"></i></div>
+              <div>
+                <div class="feature-title">{{ title }}</div>
+                <div class="feature-desc">{{ desc }}</div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     SAFETY / DISCLAIMER
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="disclaimer-section" aria-label="Safety disclaimer">
+  <div class="container">
+    <div class="disclaimer-content">
+      <i class="bi bi-exclamation-triangle-fill disclaimer-icon"></i>
+      <div>
+        <div class="disclaimer-title">Important Medical Disclaimer</div>
+        <p class="disclaimer-text mb-0">
+          MediFind is an information and reservation platform only. We do not prescribe medicines
+          or provide medical advice. Always consult a qualified healthcare professional before taking
+          any medication. Prescription medicines require a valid prescription from a licensed doctor.
+          Stock availability shown is indicative — always confirm with the pharmacy before visiting.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ── Homepage JS ───────────────────────────────────────────────────────────── */
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Animate counter on hero load
+  animateHeroCounters();
+
+  // Load popular medicines
+  await loadPopularMedicines();
+
+  // Load featured pharmacies
+  await loadFeaturedPharmacies();
+
+  // Location buttons
+  initLocationButtons();
+});
+
+// ── Counter animation (hero) ─────────────────────────────────────────────────
+function animateHeroCounters() {
+  const counters = [
+    { el: document.getElementById('ctr-meds'),    target: 10000,  suffix: '+', separator: true },
+    { el: document.getElementById('ctr-pharm'),   target: 500,    suffix: '+' },
+    { el: document.getElementById('ctr-orders'),  target: 50000,  suffix: '+', separator: true },
+  ];
+  counters.forEach(({ el, target, suffix = '', separator }) => {
+    if (!el) return;
+    let current = 0;
+    const step = Math.ceil(target / 60);
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = (separator ? current.toLocaleString('en-IN') : current) + suffix;
+      if (current >= target) clearInterval(timer);
+    }, 20);
+  });
+}
+
+// ── Popular Medicines ─────────────────────────────────────────────────────────
+let allMeds = [];
+
+async function loadPopularMedicines(category = 'All') {
+  const grid = document.getElementById('popularMedsGrid');
+  if (!grid) return;
+
+  grid.innerHTML = UI.skeletonCard(8);
+
+  const params = category !== 'All' ? `category=${encodeURIComponent(category)}&` : '';
+  const { ok, data } = await API.getMedicines(`${params}per_page=8`);
+
+  if (!ok || !data?.data?.items?.length) {
+    UI.renderEmpty(grid, 'No medicines found.', 'bi-capsule');
+    return;
+  }
+  allMeds = data.data.items;
+  renderMedicineCards(grid, allMeds);
+}
+
+function renderMedicineCards(container, medicines) {
+  if (!container) return;
+  container.innerHTML = medicines.map(med => `
+    <div class="col">
+      <article class="medicine-card h-100" aria-label="${med.name}">
+        <div class="medicine-card-header">
+          <div class="medicine-icon">
+            <i class="bi bi-capsule${med.dosage_form?.toLowerCase().includes('syrup') ? '-pill' : ''}"></i>
+          </div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="medicine-name">${med.name}</div>
+            <div class="medicine-generic">${med.generic_name || '—'}</div>
+          </div>
+          ${med.prescription_required
+            ? '<span class="status-badge" style="background:#fdf4ff;color:#7c3aed;font-size:.7rem;"><i class="bi bi-file-medical"></i> Rx</span>'
+            : '<span class="status-badge in-stock" style="font-size:.7rem;"><i class="bi bi-check-circle"></i> OTC</span>'
+          }
+        </div>
+        <div class="medicine-card-body">
+          <div class="medicine-meta">
+            ${med.strength    ? `<span class="medicine-tag"><i class="bi bi-layers me-1"></i>${med.strength}</span>` : ''}
+            ${med.dosage_form ? `<span class="medicine-tag"><i class="bi bi-capsule me-1"></i>${med.dosage_form}</span>` : ''}
+            ${med.category    ? `<span class="medicine-tag"><i class="bi bi-tag me-1"></i>${med.category}</span>` : ''}
+          </div>
+          <p class="text-muted mt-2 mb-0 flex-grow-1" style="font-size:.8125rem;">${med.manufacturer || ''}</p>
+        </div>
+        <div class="medicine-card-footer">
+          <a href="/medicine/${med._id}" class="btn btn-outline-primary btn-sm flex-grow-1">
+            <i class="bi bi-eye me-1"></i>View Details
+          </a>
+          <a href="/availability?medicine_id=${med._id}" class="btn btn-primary btn-sm flex-grow-1">
+            <i class="bi bi-shop me-1"></i>Availability
+          </a>
+        </div>
+      </article>
+    </div>
+  `).join('');
+}
+
+window.filterMedsByCategory = function(btn) {
+  document.querySelectorAll('#medCategoryFilter .btn').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-ghost');
+    b.setAttribute('aria-selected', 'false');
+  });
+  btn.classList.add('btn-primary');
+  btn.classList.remove('btn-ghost');
+  btn.setAttribute('aria-selected', 'true');
+  loadPopularMedicines(btn.dataset.category);
+};
+
+// ── Featured Pharmacies ───────────────────────────────────────────────────────
+async function loadFeaturedPharmacies() {
+  const grid = document.getElementById('featuredPharmaciesGrid');
+  if (!grid) return;
+
+  grid.innerHTML = `<div class="col-12 text-center py-4"><div class="spinner-border text-secondary" role="status"></div></div>`;
+
+  const { ok, data } = await API.getPharmacies('per_page=6&status=VERIFIED');
+  if (!ok || !data?.data?.items?.length) {
+    UI.renderEmpty(grid, 'No pharmacies listed yet.', 'bi-shop');
+    return;
+  }
+  renderPharmacyCards(grid, data.data.items);
+}
+
+function renderPharmacyCards(container, pharmacies, distanceMap = {}) {
+  if (!container) return;
+  container.innerHTML = pharmacies.map(ph => `
+    <div class="col-md-6 col-lg-4">
+      <article class="pharm-card" aria-label="${ph.name}">
+        <div class="pharm-card-header">
+          <div class="pharm-avatar"><i class="bi bi-shop"></i></div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="pharm-name">${ph.name}</div>
+            <div class="pharm-address">${ph.address}, ${ph.city}</div>
+          </div>
+          <span class="status-badge verified flex-shrink-0">
+            <i class="bi bi-patch-check-fill"></i> Verified
+          </span>
+        </div>
+        <div class="pharm-meta">
+          ${distanceMap[ph._id]
+            ? `<div class="pharm-meta-item"><i class="bi bi-geo-alt-fill"></i>${UI.formatDistance(distanceMap[ph._id])}</div>`
+            : ''
+          }
+          <div class="pharm-meta-item"><i class="bi bi-telephone-fill"></i>${ph.phone || '—'}</div>
+          <div class="pharm-meta-item"><i class="bi bi-envelope-fill"></i>${ph.email || '—'}</div>
+        </div>
+        <div class="pharm-actions">
+          <a href="/pharmacy/${ph._id}" class="btn btn-outline-primary btn-sm flex-grow-1">
+            <i class="bi bi-eye me-1"></i>View
+          </a>
+          <a href="/medicines?pharmacy_id=${ph._id}" class="btn btn-primary btn-sm flex-grow-1">
+            <i class="bi bi-capsule me-1"></i>Medicines
+          </a>
+        </div>
+      </article>
+    </div>
+  `).join('');
+}
+
+// ── Location buttons ──────────────────────────────────────────────────────────
+function initLocationButtons() {
+  const allowBtn    = document.getElementById('allowLocationBtn');
+  const detectBtn   = document.getElementById('nearbyPharmaciesBtn');
+  const detectBtn2  = document.getElementById('detectLocationBtn');
+  const pincodeBtn  = document.getElementById('pincodeSearchBtn');
+
+  const doLocationSearch = async () => {
+    const grid   = document.getElementById('nearbyPharmaciesGrid');
+    const prompt = document.getElementById('locationPrompt');
+
+    UI.setButtonLoading(allowBtn, true, 'Getting location…');
+    UI.setButtonLoading(detectBtn, true, 'Detecting…');
+    UI.setButtonLoading(detectBtn2, true, 'Detecting…');
+
+    try {
+      const { lat, lng } = await getUserLocation();
+      if (prompt) prompt.style.display = 'none';
+
+      if (grid) grid.innerHTML = UI.skeletonCard(6);
+
+      const { ok, data } = await API.getNearby(lat, lng, 10);
+      UI.setButtonLoading(allowBtn, false);
+      UI.setButtonLoading(detectBtn, false);
+      UI.setButtonLoading(detectBtn2, false);
+
+      if (!ok || !data?.data?.items?.length) {
+        UI.renderEmpty(grid, 'No verified pharmacies found nearby. Try increasing the radius.', 'bi-shop');
+        return;
+      }
+      // Build distance map from response
+      const distMap = {};
+      data.data.items.forEach(ph => { if (ph.distance != null) distMap[ph._id] = ph.distance / 1000; });
+      renderPharmacyCards(grid, data.data.items, distMap);
+    } catch (err) {
+      UI.setButtonLoading(allowBtn, false);
+      UI.setButtonLoading(detectBtn, false);
+      UI.setButtonLoading(detectBtn2, false);
+      UI.showToast('Could not get your location. Please enter your pincode instead.', 'warning');
+    }
+  };
+
+  if (allowBtn)   allowBtn.addEventListener('click', doLocationSearch);
+  if (detectBtn)  detectBtn.addEventListener('click', doLocationSearch);
+  if (detectBtn2) detectBtn2.addEventListener('click', doLocationSearch);
+
+  if (pincodeBtn) {
+    pincodeBtn.addEventListener('click', () => {
+      const pincode = document.getElementById('pincodeInput')?.value?.trim();
+      if (pincode?.length !== 6 || isNaN(pincode)) {
+        UI.showToast('Please enter a valid 6-digit pincode.', 'warning');
+        return;
+      }
+      window.location.href = `/pharmacies?pincode=${pincode}`;
+    });
+  }
+}
+</script>
+{% endblock %}

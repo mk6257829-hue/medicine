@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}About Us — MediFind{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="about-hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-3 rounded-pill fw-600">
+          <i class="bi bi-heart-fill me-1"></i>Our Mission
+        </span>
+        <h1 class="fw-800 mb-4" style="font-size:2.5rem;font-family:var(--font-display);line-height:1.2;">
+          Making Medicines<br>Accessible to <span style="color:var(--clr-primary);">Everyone</span>
+        </h1>
+        <p class="text-muted fs-5 mb-4" style="line-height:1.7;">
+          MediFind connects patients with verified pharmacies across India. We help you find medicines in real-time, upload prescriptions digitally, and reserve medicines at your nearest pharmacy.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="/medicines" class="btn btn-primary px-4">Find Medicines</a>
+          <a href="/contact" class="btn btn-outline-primary px-4">Contact Us</a>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="dash-stat-card text-center">
+              <div class="dash-stat-val text-primary">10K+</div>
+              <div class="dash-stat-label">Medicines Listed</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="dash-stat-card text-center">
+              <div class="dash-stat-val text-success">500+</div>
+              <div class="dash-stat-label">Verified Pharmacies</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="dash-stat-card text-center">
+              <div class="dash-stat-val text-warning">50K+</div>
+              <div class="dash-stat-label">Orders Fulfilled</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="dash-stat-card text-center">
+              <div class="dash-stat-val text-info">12K+</div>
+              <div class="dash-stat-label">Happy Users</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Values -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-800" style="font-family:var(--font-display);">Why MediFind?</h2>
+      <p class="text-muted">Built with patients and pharmacies in mind</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="dash-card p-4 text-center h-100">
+          <div class="dash-stat-icon mx-auto mb-3 dash-stat-blue" style="width:60px;height:60px;font-size:1.5rem;">
+            <i class="bi bi-lightning-charge"></i>
+          </div>
+          <h5 class="fw-700">Real-time Availability</h5>
+          <p class="text-muted small">Check live medicine stock at pharmacies near you before making a trip.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dash-card p-4 text-center h-100">
+          <div class="dash-stat-icon mx-auto mb-3 dash-stat-green" style="width:60px;height:60px;font-size:1.5rem;">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <h5 class="fw-700">Verified Partners</h5>
+          <p class="text-muted small">All pharmacies on our platform are licensed and verified by our team.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dash-card p-4 text-center h-100">
+          <div class="dash-stat-icon mx-auto mb-3 dash-stat-purple" style="width:60px;height:60px;font-size:1.5rem;">
+            <i class="bi bi-file-medical"></i>
+          </div>
+          <h5 class="fw-700">Digital Prescriptions</h5>
+          <p class="text-muted small">Upload and manage your prescriptions digitally. No more paper hassle.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Team -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-800" style="font-family:var(--font-display);">Our Team</h2>
+      <p class="text-muted">Passionate people building for healthcare</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      {% for member in [
+        {'name': 'Dr. Anjali Mehta', 'role': 'Co-Founder & CEO', 'icon': 'person-circle'},
+        {'name': 'Rahul Sharma', 'role': 'CTO & Co-Founder', 'icon': 'person-circle'},
+        {'name': 'Priya Nair', 'role': 'Head of Operations', 'icon': 'person-circle'},
+      ] %}
+      <div class="col-md-4 col-sm-6">
+        <div class="dash-card text-center p-4">
+          <div class="mx-auto mb-3" style="width:72px;height:72px;background:var(--clr-primary-50);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-{{ member.icon }} text-primary" style="font-size:2rem;"></i>
+          </div>
+          <h6 class="fw-700 mb-1">{{ member.name }}</h6>
+          <div class="text-muted small">{{ member.role }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

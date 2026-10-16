@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+{% block title %}Gangoh Medical Store Map{% endblock %}
+{% block meta_description %}Find pharmacies and medical stores in Gangoh, Uttar Pradesh on an interactive map. View locations, directions and details.{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet.js CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+  /* ── Map page layout ──────────────────────────────────────────────────── */
+  .map-hero {
+    background: linear-gradient(135deg, var(--clr-primary) 0%, #0d9488 100%);
+    padding: 2.5rem 0 1.5rem;
+    color: #fff;
+  }
+  .map-hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem; }
+  .map-hero p  { opacity: .85; font-size: .95rem; margin-bottom: 0; }
+
+  /* ── Two-column layout ────────────────────────────────────────────────── */
+  .map-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 0;
+    height: calc(100vh - 160px);
+    min-height: 500px;
+  }
+  @media (max-width: 900px) {
+    .map-layout {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+    #mapContainer { height: 55vw; min-height: 280px; }
+  }
+
+  /* ── Sidebar ─────────────────────────────────────────────────────────── */
+  .map-sidebar {
+    background: #fff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 1rem 1.25rem .75rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    flex-shrink: 0;
+  }
+  .sidebar-header h2 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
+  .search-bar { display: flex; gap: .5rem; }
+  .search-bar input { flex: 1; }
+
+  /* ── Status badges ───────────────────────────────────────────────────── */
+  .badge-verified   { background: #d1fae5; color: #065f46; font-size: .7rem; border-radius: 20px; padding: .25rem .6rem; font-weight: 600; }
+  .badge-unverified { background: #fef3c7; color: #92400e; font-size: .7rem; border-radius: 20px; padding: .25rem .6rem; font-weight: 600; }
+
+  /* ── Pharmacy list ───────────────────────────────────────────────────── */
+  .pharmacy-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: .5rem .75rem;
+  }
+  .ph-item {
+    padding: .85rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: .5rem;
+    cursor: pointer;
+    transition: all .2s ease;
+    background: #fff;
+  }
+  .ph-item:hover, .ph-item.active {
+    border-color: var(--clr-primary);
+    background: #eff6ff;
+    box-shadow: 0 2px 12px rgba(26,86,219,.08);
+  }
+  .ph-item .ph-name { font-weight: 700; font-size: .9rem; color: #0f172a; margin-bottom: .2rem; }
+  .ph-item .ph-addr { font-size: .78rem; color: #64748b; }
+  .ph-item .ph-meta { margin-top: .5rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+  /* ── Map ─────────────────────────────────────────────────────────────── */
+  #mapContainer { width: 100%; height: 100%; }
+
+  /* ── Warning banner ──────────────────────────────────────────────────── */
+  .data-warning {
+    background: #fffbeb;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: .6rem 1rem;
+    font-size: .78rem;
+    color: #92400e;
+    margin: .75rem 1.25rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Leaflet popup overrides ─────────────────────────────────────────── */
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.15) !important;
+    min-width: 240px;
+  }
+  .popup-name   { font-weight: 700; font-size: 1rem; color: #0f172a; margin-bottom: .3rem; }
+  .popup-addr   { font-size: .82rem; color: #64748b; margin-bottom: .5rem; }
+  .popup-footer { display: flex; gap: .5rem; margin-top: .75rem; }
+  .popup-footer a { flex: 1; }
+
+  /* ── States ──────────────────────────────────────────────────────────── */
+  #sidebarEmpty, #sidebarError, #sidebarLoading {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    color: #94a3b8;
+  }
+  #sidebarEmpty .empty-icon, #sidebarError .empty-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: .75rem;
+    opacity: .4;
+  }
+
+  /* ── Footer stats ────────────────────────────────────────────────────── */
+  .sidebar-footer {
+    padding: .65rem 1.25rem;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: .78rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .refresh-btn { background: none; border: none; color: var(--clr-primary); cursor: pointer; font-size: .78rem; font-weight: 600; }
+  .refresh-btn:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<div class="map-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb mb-0" style="font-size:.8rem;">
+        <li class="breadcrumb-item"><a href="/" class="text-white opacity-75">Home</a></li>
+        <li class="breadcrumb-item"><a href="/pharmacies" class="text-white opacity-75">Pharmacies</a></li>
+        <li class="breadcrumb-item active text-white">Gangoh Map</li>
+      </ol>
+    </nav>
+    <h1><i class="bi bi-geo-alt-fill me-2"></i>Gangoh Medical Store Map</h1>
+    <p>Pharmacies and medical stores in Gangoh, Saharanpur District, Uttar Pradesh.</p>
+  </div>
+</div>
+
+<!-- ── Map + Sidebar ─────────────────────────────────────────────────────── -->
+<div class="map-layout">
+
+  <!-- Sidebar -->
+  <aside class="map-sidebar" id="mapSidebar">
+    <div class="sidebar-header">
+      <h2><i class="bi bi-shop me-1 text-primary"></i>Medical Stores</h2>
+      <div class="search-bar">
+        <input type="text" id="pharmacySearchInput" class="form-control form-control-sm"
+               placeholder="Search by name or area…" aria-label="Search pharmacies" />
+        <button class="btn btn-primary btn-sm px-3" id="searchBtn" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+      <button class="btn btn-outline-primary btn-sm w-100 mt-2" id="checkNearbyBtn" type="button"><i class="bi bi-geo-alt me-1"></i>Check Available Near Me</button>
+    </div>
+
+    <!-- Data warning -->
+    <div class="data-warning">
+      <i class="bi bi-info-circle me-1"></i>
+      <strong>Note:</strong> Listings marked <em>Unverified</em> are from public map data.
+      Stock availability and opening hours are not confirmed unless the pharmacy has registered on MediFind.
+    </div>
+
+    <!-- States -->
+    <div id="sidebarLoading" class="d-none">
+      <span class="spinner-border spinner-border-sm text-primary me-2"></span>Loading…
+    </div>
+    <div id="sidebarError" class="d-none">
+      <span class="empty-icon">⚠️</span>
+      <p id="sidebarErrorMsg">Could not load pharmacies.</p>
+      <button class="btn btn-sm btn-outline-primary" id="retryBtn">Retry</button>
+    </div>
+    <div id="sidebarEmpty" class="d-none">
+      <span class="empty-icon"><i class="bi bi-shop"></i></span>
+      <p id="emptyMessage">No medical stores found nearby.</p>
+      <button class="btn btn-sm btn-primary" id="addStoreBtn" type="button">Add Medical Store</button>
+    </div>
+    <form id="addStoreForm" class="d-none p-3" style="overflow:auto" novalidate>
+      <h3 class="h6">Add Medical Store</h3><p class="small text-muted">Community submissions are unverified until reviewed.</p>
+      <label class="form-label small" for="storeName">Store name</label><input class="form-control form-control-sm mb-2" id="storeName" name="name" maxlength="120" required>
+      <label class="form-label small" for="storeAddress">Address</label><input class="form-control form-control-sm mb-2" id="storeAddress" name="address" maxlength="300" required>
+      <label class="form-label small" for="storePhone">Phone (optional)</label><input class="form-control form-control-sm mb-2" id="storePhone" name="phone" type="tel" maxlength="20">
+      <label class="form-label small" for="storeLat">Latitude</label><input class="form-control form-control-sm mb-2" id="storeLat" name="latitude" type="number" step="any" min="-90" max="90" required>
+      <label class="form-label small" for="storeLng">Longitude</label><input class="form-control form-control-sm mb-3" id="storeLng" name="longitude" type="number" step="any" min="-180" max="180" required>
+      <div id="storeFormMessage" class="small mb-2" role="status"></div><button class="btn btn-primary btn-sm" type="submit">Submit store</button> <button class="btn btn-link btn-sm" type="button" id="cancelStoreBtn">Cancel</button>
+    </form>
+
+    <!-- List -->
+    <div class="pharmacy-list" id="pharmacyList" role="list" aria-label="Pharmacy list"></div>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <span id="pharmacyCount">—</span>
+      <button class="refresh-btn" id="refreshBtn">
+        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+      </button>
+    </div>
+  </aside>
+
+  <!-- Map -->
+  <div id="mapContainer" aria-label="Interactive map of Gangoh pharmacies"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Leaflet.js -->
+<!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLs=" crossorigin=""></script> -->
+        
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  crossorigin="anonymous">
+</script>
+
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Configuration ────────────────────────────────────────────────────────
+  const GANGOH_CENTER = [29.7806, 77.2629];   // lat, lng
+  const GANGOH_ZOOM   = 15;
+  const NEARBY_URL    = '/api/pharmacies/nearby';
+  const SEARCH_URL    = (q) => `/api/pharmacies/search?q=${encodeURIComponent(q)}`;
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let map, markerLayer;
+  let allPharmacies = [];
+  let activeItemId  = null;
+  let searchCenter = GANGOH_CENTER;
+
+  // ── Map initialisation ───────────────────────────────────────────────────
+  function initMap() {
+    map = L.map('mapContainer', {
+      center: GANGOH_CENTER,
+      zoom: GANGOH_ZOOM,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    markerLayer = L.layerGroup().addTo(map);
+
+    // Add Gangoh city marker as reference point
+    L.circle(GANGOH_CENTER, {
+      color: '#1a56db',
+      fillColor: '#3b82f6',
+      fillOpacity: 0.08,
+      radius: 800,
+      weight: 1,
+    }).addTo(map);
+  }
+
+  // ── Custom marker icon ───────────────────────────────────────────────────
+  function makeIcon(verified) {
+    const color = verified ? '#059669' : '#d97706';
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
+        <path d="M16 0C7.163 0 0 7.163 0 16c0 11 16 26 16 26S32 27 32 16C32 7.163 24.837 0 16 0z"
+              fill="${color}" stroke="#fff" stroke-width="2"/>
+        <text x="16" y="21" text-anchor="middle" font-size="14" fill="#fff" font-family="sans-serif">+</text>
+      </svg>`;
+    return L.divIcon({
+      html: svg,
+      className: '',
+      iconSize:   [32, 42],
+      iconAnchor: [16, 42],
+      popupAnchor:[0, -44],
+    });
+  }
+
+  // ── Popup content ────────────────────────────────────────────────────────
+  function popupHTML(p) {
+    const isVerified = p.verification_status === 'VERIFIED';
+    const badge = isVerified ? '<span class="badge-verified">✓ Verified</span>'
+      : p.source === 'community_submission' ? '<span class="badge-unverified">Registered · Unverified</span>'
+      : p.source ? `<span class="badge-unverified">External · ${escHtml(p.source === 'openstreetmap' ? 'OpenStreetMap' : p.source)}</span>`
+      : '<span class="badge-unverified">Registered · Unverified</span>';
+
+    const lat = p.latitude  || (p.location?.coordinates?.[1]);
+    const lng = p.longitude || (p.location?.coordinates?.[0]);
+    const directionsUrl = lat && lng
+      ? `https://www.openstreetmap.org/directions?to=${lat},${lng}`
+      : null;
+    const gmapUrl = lat && lng
+      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+      : null;
+
+    const warning = (!isVerified && p.display_warning)
+      ? `<div class="mt-2" style="font-size:.72rem;color:#92400e;background:#fef3c7;padding:.35rem .6rem;border-radius:6px;">${p.display_warning}</div>`
+      : '';
+
+    return `
+      <div>
+        <div class="popup-name"><i class="bi bi-plus-circle-fill text-success me-1"></i>${escHtml(p.name)}</div>
+        <div class="popup-addr"><i class="bi bi-geo-alt me-1"></i>${escHtml(p.address || '')}${p.city ? ', ' + escHtml(p.city) : ''}</div>
+        <div>${badge}</div>
+        ${p.distance_km != null ? `<div class="small text-muted mt-1">${p.distance_km.toFixed(1)} km away</div>` : ''}
+        ${p.pincode ? `<div style="font-size:.75rem;color:#64748b;margin-top:.3rem;">PIN: ${escHtml(p.pincode)}</div>` : ''}
+        ${p.phone ? `<div style="font-size:.78rem;margin-top:.3rem;"><i class="bi bi-telephone me-1"></i><a href="tel:${escHtml(p.phone)}">${escHtml(p.phone)}</a></div>` : ''}
+        ${warning}
+        <div class="popup-footer">
+          ${directionsUrl ? `<a href="${directionsUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="bi bi-signpost-2 me-1"></i>OSM Directions</a>` : ''}
+          ${gmapUrl ? `<a href="${gmapUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-primary"><i class="bi bi-map me-1"></i>Google Maps</a>` : ''}
+        </div>
+      </div>`;
+  }
+
+  // ── Render markers ───────────────────────────────────────────────────────
+  function renderMarkers(list) {
+    markerLayer.clearLayers();
+    list.forEach((p, i) => {
+      const lat = p.latitude  || (p.location?.coordinates?.[1]);
+      const lng = p.longitude || (p.location?.coordinates?.[0]);
+      if (!lat || !lng) return;   // skip pharmacies without coordinates
+
+      const marker = L.marker([lat, lng], { icon: makeIcon(p.verification_status === 'VERIFIED') });
+      marker.bindPopup(popupHTML(p), { minWidth: 240 });
+      marker.on('click', () => activateItem(String(p._id || i)));
+      marker._pharmacyId = String(p._id || i);
+      markerLayer.addLayer(marker);
+    });
+  }
+
+  // ── Render sidebar list ──────────────────────────────────────────────────
+  function renderList(list) {
+    const container = document.getElementById('pharmacyList');
+    const empty     = document.getElementById('sidebarEmpty');
+    const count     = document.getElementById('pharmacyCount');
+
+    count.textContent = `${list.length} store${list.length !== 1 ? 's' : ''} found`;
+
+    if (!list.length) {
+      container.innerHTML = '';
+      empty.classList.remove('d-none');
+      return;
+    }
+    empty.classList.add('d-none');
+
+    container.innerHTML = list.map((p, i) => {
+      const id = String(p._id || i);
+      const isVerified = p.verification_status === 'VERIFIED';
+      const hasCoords  = (p.latitude || p.location?.coordinates?.[1]);
+      const badge = isVerified ? '<span class="badge-verified">✓ Verified</span>'
+        : p.source === 'community_submission' ? '<span class="badge-unverified">Registered · Unverified</span>'
+        : p.source ? `<span class="badge-unverified">External · ${escHtml(p.source === 'openstreetmap' ? 'OpenStreetMap' : p.source)}</span>`
+        : '<span class="badge-unverified">Registered · Unverified</span>';
+      const noCoordWarn = !hasCoords
+        ? '<span style="font-size:.7rem;color:#94a3b8;"><i class="bi bi-question-circle me-1"></i>No map pin</span>'
+        : '';
+      return `
+        <div class="ph-item" role="listitem" data-id="${escAttr(id)}" tabindex="0"
+             aria-label="${escAttr(p.name)}">
+          <div class="ph-name">${escHtml(p.name)}</div>
+          <div class="ph-addr"><i class="bi bi-geo-alt me-1"></i>${escHtml(p.address || p.city || 'Gangoh, UP')}</div>
+          <div class="ph-meta">${badge}${p.distance_km != null ? `<span class="small text-muted">${p.distance_km.toFixed(1)} km</span>` : ''}${noCoordWarn}</div>
+        </div>`;
+    }).join('');
+
+    // Click / keyboard handlers
+    container.querySelectorAll('.ph-item').forEach(el => {
+      el.addEventListener('click', () => activateItem(el.dataset.id, true));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') activateItem(el.dataset.id, true); });
+    });
+  }
+
+  // ── Activate pharmacy (highlight list + open popup) ──────────────────────
+  function activateItem(id, flyToMarker = false) {
+    // Sidebar highlight
+    document.querySelectorAll('.ph-item').forEach(el => el.classList.remove('active'));
+    const el = document.querySelector(`.ph-item[data-id="${id}"]`);
+    if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    activeItemId = id;
+
+    // Map marker popup
+    markerLayer.eachLayer(layer => {
+      if (layer._pharmacyId === id) {
+        if (flyToMarker) {
+          map.flyTo(layer.getLatLng(), Math.max(map.getZoom(), 17), { duration: .6 });
+        }
+        setTimeout(() => layer.openPopup(), flyToMarker ? 650 : 0);
+      }
+    });
+  }
+
+  // ── Load pharmacies from API ─────────────────────────────────────────────
+  async function loadPharmacies(url) {
+    setState('loading');
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        const json = await resp.json().catch(() => ({}));
+        throw new Error(json.message || `HTTP ${resp.status}`);
+      }
+      const json = await resp.json();
+      let list = json.data?.pharmacies || json.pharmacies || [];
+      // Name searches must stay inside the active 10 km search area too.
+      if (url.startsWith(SEARCH_URL(''))) {
+        list = list.map(p => {
+          const lat = Number(p.latitude ?? p.location?.coordinates?.[1]);
+          const lng = Number(p.longitude ?? p.location?.coordinates?.[0]);
+          return { ...p, distance_km: Number.isFinite(lat) && Number.isFinite(lng)
+            ? distanceKm(searchCenter[0], searchCenter[1], lat, lng) : null };
+        }).filter(p => p.distance_km !== null && p.distance_km <= 10);
+      }
+      allPharmacies = list;
+      renderMarkers(list);
+      renderList(list);
+      setState(list.length ? 'list' : 'empty');
+    } catch (err) {
+      console.error('Pharmacy load error:', err);
+      setState('error', err.message);
+    }
+  }
+
+  function distanceKm(lat1,lng1,lat2,lng2){const r=n=>n*Math.PI/180,a=Math.sin(r(lat2-lat1)/2)**2+Math.cos(r(lat1))*Math.cos(r(lat2))*Math.sin(r(lng2-lng1)/2)**2;return 6371*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+  async function checkNearby(lat,lng){searchCenter=[lat,lng];setState('loading');map.setView([lat,lng],14);try{
+    const resp=await fetch(`${NEARBY_URL}?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radius=10000`),json=await resp.json();if(!resp.ok)throw new Error(json.message||'Could not search nearby stores.');let list=json.data?.pharmacies||[];
+    if(!list.length){const r=await fetch(`/api/pharmacies/osm-fetch?south=${lat-.09}&west=${lng-.10}&north=${lat+.09}&east=${lng+.10}`),o=await r.json();if(o.data?.osm_error)throw new Error('OpenStreetMap search is temporarily unavailable. Please retry.');list=(o.data?.pharmacies||[]).map(p=>({...p,source:'openstreetmap',display_warning:'Externally sourced OpenStreetMap listing. Details and stock have not been verified.'}));}
+    list=list.map(p=>{const y=Number(p.latitude??p.location?.coordinates?.[1]),x=Number(p.longitude??p.location?.coordinates?.[0]);return {...p,distance_km:Number.isFinite(y)&&Number.isFinite(x)?distanceKm(lat,lng,y,x):null};}).filter(p=>p.distance_km!==null&&p.distance_km<=10).sort((a,b)=>a.distance_km-b.distance_km);allPharmacies=list;
+    document.getElementById('emptyMessage').textContent='No medical stores found within 10 km. You can add a store for review.';renderMarkers(list);renderList(list);setState(list.length?'list':'empty');
+  }catch(err){setState('error',err.message||'Could not load nearby stores. Please retry.');}}
+
+  // ── Search ───────────────────────────────────────────────────────────────
+  async function doSearch() {
+    const q = document.getElementById('pharmacySearchInput').value.trim();
+    if (!q) { checkNearby(searchCenter[0], searchCenter[1]); return; }
+    if (q.length < 2) { showToastMsg('Type at least 2 characters to search.'); return; }
+
+    // First filter locally
+    const localResults = allPharmacies.filter(p =>
+      p.name.toLowerCase().includes(q.toLowerCase()) ||
+      (p.address || '').toLowerCase().includes(q.toLowerCase())
+    );
+
+    if (localResults.length) {
+      renderMarkers(localResults);
+      renderList(localResults);
+      return;
+    }
+
+    // Fall back to API search
+    loadPharmacies(SEARCH_URL(q));
+  }
+
+  // ── UI state machine ─────────────────────────────────────────────────────
+  function setState(state, msg = '') {
+    document.getElementById('sidebarLoading').classList.toggle('d-none', state !== 'loading');
+    document.getElementById('sidebarError').classList.toggle('d-none',   state !== 'error');
+    document.getElementById('sidebarEmpty').classList.toggle('d-none',   state !== 'empty');
+    if (state === 'loading') {
+      document.getElementById('pharmacyList').innerHTML = '';
+      document.getElementById('pharmacyCount').textContent = 'Loading…';
+    }
+    if (state === 'error') {
+      document.getElementById('sidebarErrorMsg').textContent = msg || 'Failed to load pharmacies.';
+    }
+  }
+
+  // ── Simple toast ─────────────────────────────────────────────────────────
+  function showToastMsg(msg) {
+    if (window.UI?.showToast) { UI.showToast(msg, 'info'); return; }
+    const d = document.createElement('div');
+    d.className = 'alert alert-info position-fixed bottom-0 end-0 m-3';
+    d.style.zIndex = '9999';
+    d.textContent = msg;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 3000);
+  }
+
+  // ── XSS-safe helpers ─────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(str) { return escHtml(str); }
+
+  // ── Event wiring ─────────────────────────────────────────────────────────
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+  document.getElementById('pharmacySearchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+  document.getElementById('refreshBtn').addEventListener('click', () => {
+    document.getElementById('pharmacySearchInput').value = '';
+    checkNearby(searchCenter[0], searchCenter[1]);
+  });
+  document.getElementById('retryBtn')?.addEventListener('click', () => checkNearby(searchCenter[0], searchCenter[1]));
+  document.getElementById('checkNearbyBtn')?.addEventListener('click',()=>{const btn=document.getElementById('checkNearbyBtn'),fallback=GANGOH_CENTER,original=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Finding nearby stores…';const search=(lat,lng)=>checkNearby(lat,lng).finally(()=>{btn.disabled=false;btn.innerHTML=original;});if(!navigator.geolocation)return search(...fallback);navigator.geolocation.getCurrentPosition(p=>search(p.coords.latitude,p.coords.longitude),()=>{showToastMsg('Location permission denied or unavailable. Showing Gangoh, Saharanpur.');search(...fallback);},{timeout:8000,maximumAge:60000});});
+  document.getElementById('addStoreBtn')?.addEventListener('click',()=>{const f=document.getElementById('addStoreForm');f.classList.remove('d-none');document.getElementById('storeLat').value=map.getCenter().lat.toFixed(6);document.getElementById('storeLng').value=map.getCenter().lng.toFixed(6);});
+  document.getElementById('cancelStoreBtn')?.addEventListener('click',()=>document.getElementById('addStoreForm').classList.add('d-none'));
+  document.getElementById('addStoreForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,msg=document.getElementById('storeFormMessage');if(!f.reportValidity())return;try{const r=await fetch('/api/pharmacies/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(f)))}),j=await r.json();if(!r.ok)throw new Error(j.message||'Could not submit store.');msg.className='small mb-2 text-success';msg.textContent=j.message;f.reset();await checkNearby(map.getCenter().lat,map.getCenter().lng);}catch(err){msg.className='small mb-2 text-danger';msg.textContent=err.message;}});
+
+  // ── Bootstrap ────────────────────────────────────────────────────────────
+  initMap();
+  const params=new URLSearchParams(window.location.search);
+  const requestedLat=Number(params.get('lat')), requestedLng=Number(params.get('lng'));
+  // Ignore old/unmarked query coordinates (including stale Delhi URLs). Only honor
+  // coordinates explicitly supplied by the current-location action.
+  if(params.get('nearby')==='1' && params.get('location')==='current' && Number.isFinite(requestedLat) && Number.isFinite(requestedLng) && Math.abs(requestedLat)<=90 && Math.abs(requestedLng)<=180) {
+    checkNearby(requestedLat, requestedLng);
+  } else {
+    checkNearby(GANGOH_CENTER[0], GANGOH_CENTER[1]);
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Find Medicine{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  <!-- Reuse sidebar partial -->
+  <aside class="dashboard-sidebar" id="dashSidebar">
+    <div class="dash-sidebar-brand">
+      <div class="brand-icon brand-icon-sm"><i class="bi bi-capsule-pill"></i></div>
+      <span class="fw-700">Medi<span class="brand-accent">Find</span></span>
+    </div>
+    <nav class="dash-nav mt-4">
+      <a href="/dashboard"     class="dash-nav-link"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+      <a href="/search"        class="dash-nav-link active"><i class="bi bi-search"></i><span>Find Medicine</span></a>
+      <a href="/availability"  class="dash-nav-link"><i class="bi bi-geo-alt"></i><span>Nearby Availability</span></a>
+      <a href="/prescriptions" class="dash-nav-link"><i class="bi bi-file-medical"></i><span>Prescriptions</span></a>
+      <a href="/orders"        class="dash-nav-link"><i class="bi bi-bag"></i><span>My Orders</span></a>
+      <a href="/notifications" class="dash-nav-link"><i class="bi bi-bell"></i><span>Notifications</span></a>
+      <div class="dash-nav-divider"></div>
+      <a href="/profile"       class="dash-nav-link"><i class="bi bi-person-gear"></i><span>Profile</span></a>
+    </nav>
+  </aside>
+  <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+  <main class="dashboard-main">
+    <div class="dash-topbar">
+      <button class="dash-menu-toggle d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <div class="dash-topbar-title">Find Medicine</div>
+    </div>
+
+    <div class="dash-content">
+      <div class="dash-card mb-4">
+        <div class="dash-card-header"><span class="fw-600"><i class="bi bi-search me-2"></i>Search Medicines</span></div>
+        <div class="p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="auth-input-wrap">
+                <i class="bi bi-capsule auth-input-icon"></i>
+                <input type="text" id="userSearchInput" class="auth-input form-control" placeholder="Medicine name, brand or generic…" autocomplete="off" />
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select class="form-select" id="userSearchCategory">
+                <option value="">All Categories</option>
+                <option value="antibiotic">Antibiotics</option>
+                <option value="analgesic">Analgesics</option>
+                <option value="vitamin">Vitamins</option>
+                <option value="cardiovascular">Cardiovascular</option>
+                <option value="diabetes">Diabetes</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-primary w-100" id="userSearchBtn">
+                <i class="bi bi-search me-2"></i>Search
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="searchResultsSection">
+        <div id="searchResultsLoader" class="text-center py-5 d-none">
+          <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Searching…</span></div>
+          <div class="text-muted mt-2 small">Searching medicines…</div>
+        </div>
+
+        <div id="searchResultsGrid" class="row g-3"></div>
+
+        <div id="searchInitial" class="text-center py-5">
+          <i class="bi bi-search" style="font-size:4rem;opacity:.15;color:var(--clr-primary);"></i>
+          <h5 class="mt-3 text-muted">Search for a medicine</h5>
+          <p class="text-muted small">Enter a medicine name above to see availability at pharmacies near you.</p>
+          <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+            <button class="btn btn-outline-primary btn-sm quick-search-tag">Paracetamol</button>
+            <button class="btn btn-outline-primary btn-sm quick-search-tag">Amoxicillin</button>
+            <button class="btn btn-outline-primary btn-sm quick-search-tag">Metformin</button>
+            <button class="btn btn-outline-primary btn-sm quick-search-tag">Cetirizine</button>
+            <button class="btn btn-outline-primary btn-sm quick-search-tag">Vitamin D3</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+  document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  });
+
+  const medicines = [
+    { _id: 'p1', name: 'Paracetamol 500mg', generic_name: 'Acetaminophen', category: 'Analgesic', price: 18, total_stock: 150, prescription_required: false },
+    { _id: 'p2', name: 'Amoxicillin 250mg', generic_name: 'Amoxicillin trihydrate', category: 'Antibiotic', price: 85, total_stock: 45, prescription_required: true },
+    { _id: 'p3', name: 'Metformin 500mg', generic_name: 'Metformin HCl', category: 'Diabetes', price: 55, total_stock: 0, prescription_required: true },
+    { _id: 'p4', name: 'Cetirizine 10mg', generic_name: 'Cetirizine HCl', category: 'Antihistamine', price: 32, total_stock: 200, prescription_required: false },
+    { _id: 'p5', name: 'Vitamin D3 1000IU', generic_name: 'Cholecalciferol', category: 'Vitamin', price: 220, total_stock: 500, prescription_required: false },
+    { _id: 'p6', name: 'Omeprazole 20mg', generic_name: 'Omeprazole', category: 'Gastro', price: 48, total_stock: 12, prescription_required: false },
+  ];
+
+  function getAvailBadge(stock) {
+    if (stock > 20) return ['bg-success-subtle text-success', 'In Stock'];
+    if (stock > 0)  return ['bg-warning-subtle text-warning', 'Low Stock'];
+    return ['bg-danger-subtle text-danger', 'Out of Stock'];
+  }
+
+  function renderCard(m) {
+    const [cls, label] = getAvailBadge(m.total_stock || 0);
+    return `<div class="col-md-6 col-xl-4">
+      <div class="medicine-card">
+        <div class="medicine-card-img-wrap">
+          <div class="medicine-card-icon"><i class="bi bi-capsule-pill"></i></div>
+          <div class="medicine-card-badges"><span class="badge ${cls}">${label}</span></div>
+        </div>
+        <div class="medicine-card-body">
+          <div class="medicine-card-category text-muted small text-uppercase">${m.category}</div>
+          <h3 class="medicine-card-name">${m.name}</h3>
+          <p class="medicine-card-generic text-muted small">${m.generic_name}</p>
+          <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
+            <span class="fw-700">${m.price ? '₹'+m.price.toFixed(2) : '—'}</span>
+            <a href="/medicine/${m._id}" class="btn btn-primary btn-sm">View Details</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function doSearch(q) {
+    const loader = document.getElementById('searchResultsLoader');
+    const grid   = document.getElementById('searchResultsGrid');
+    const initial= document.getElementById('searchInitial');
+    if (!q) { grid.innerHTML = ''; initial.classList.remove('d-none'); return; }
+    initial.classList.add('d-none');
+    loader.classList.remove('d-none');
+    grid.innerHTML = '';
+    setTimeout(async () => {
+      try {
+        const cat = document.getElementById('userSearchCategory').value;
+        const params = new URLSearchParams({ q, ...(cat && { category: cat }) });
+        const res = await fetch(`/api/search?${params}`).then(r => r.json());
+        const results = res.data || [];
+        loader.classList.add('d-none');
+        if (!results.length) throw new Error();
+        grid.innerHTML = results.map(renderCard).join('');
+      } catch (_) {
+        loader.classList.add('d-none');
+        const filtered = medicines.filter(m => m.name.toLowerCase().includes(q.toLowerCase()) || m.generic_name.toLowerCase().includes(q.toLowerCase()));
+        grid.innerHTML = filtered.length ? filtered.map(renderCard).join('') :
+          '<div class="col-12 text-center py-4 text-muted"><i class="bi bi-search fs-2 d-block mb-2 opacity-25"></i>No medicines found for "' + q + '"</div>';
+      }
+    }, 600);
+  }
+
+  document.getElementById('userSearchBtn')?.addEventListener('click', () => doSearch(document.getElementById('userSearchInput').value.trim()));
+  document.getElementById('userSearchInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(e.target.value.trim()); });
+  document.querySelectorAll('.quick-search-tag').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('userSearchInput').value = btn.textContent;
+      doSearch(btn.textContent);
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  <aside class="dashboard-sidebar" id="dashSidebar">
+    <div class="dash-sidebar-brand">
+      <div class="brand-icon brand-icon-sm"><i class="bi bi-capsule-pill"></i></div>
+      <span class="fw-700">Medi<span class="brand-accent">Find</span></span>
+    </div>
+    <nav class="dash-nav mt-4">
+      <a href="/dashboard"     class="dash-nav-link"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+      <a href="/search"        class="dash-nav-link"><i class="bi bi-search"></i><span>Find Medicine</span></a>
+      <a href="/availability"  class="dash-nav-link"><i class="bi bi-geo-alt"></i><span>Nearby Availability</span></a>
+      <a href="/prescriptions" class="dash-nav-link"><i class="bi bi-file-medical"></i><span>Prescriptions</span></a>
+      <a href="/orders"        class="dash-nav-link active"><i class="bi bi-bag"></i><span>My Orders</span></a>
+      <a href="/notifications" class="dash-nav-link"><i class="bi bi-bell"></i><span>Notifications</span></a>
+      <div class="dash-nav-divider"></div>
+      <a href="/profile"       class="dash-nav-link"><i class="bi bi-person-gear"></i><span>Profile</span></a>
+    </nav>
+  </aside>
+  <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+  <main class="dashboard-main">
+    <div class="dash-topbar">
+      <button class="dash-menu-toggle d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <div class="dash-topbar-title">My Orders</div>
+    </div>
+
+    <div class="dash-content">
+      <!-- Filter tabs -->
+      <div class="dash-card mb-4">
+        <div class="p-3">
+          <div class="order-filter-tabs" id="orderTabs">
+            <button class="order-tab active" data-status="">All Orders</button>
+            <button class="order-tab" data-status="pending">Pending</button>
+            <button class="order-tab" data-status="confirmed">Confirmed</button>
+            <button class="order-tab" data-status="dispatched">Dispatched</button>
+            <button class="order-tab" data-status="delivered">Delivered</button>
+            <button class="order-tab" data-status="cancelled">Cancelled</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders list -->
+      <div id="ordersLoader" class="text-center py-4">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+      </div>
+
+      <div id="ordersList" class="d-none"></div>
+      <div id="ordersEmpty" class="d-none dash-card">
+        <div class="text-center py-5">
+          <i class="bi bi-bag" style="font-size:3rem;opacity:.2;"></i>
+          <h6 class="mt-3 text-muted">No orders found</h6>
+          <p class="text-muted small">Place your first order by finding a medicine.</p>
+          <a href="/search" class="btn btn-primary btn-sm mt-2"><i class="bi bi-search me-1"></i>Find Medicine</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+  document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  });
+
+  const demoOrders = [
+    { _id: 'ORD001', medicine_name: 'Paracetamol 500mg × 2', pharmacy_name: 'Apollo Pharmacy, Connaught Place', total: 36, status: 'delivered', created_at: '2026-09-20T10:00:00Z' },
+    { _id: 'ORD002', medicine_name: 'Amoxicillin 250mg × 1', pharmacy_name: 'MedPlus, Karol Bagh', total: 85, status: 'pending', created_at: '2026-09-23T14:00:00Z' },
+    { _id: 'ORD003', medicine_name: 'Vitamin D3 1000IU × 1', pharmacy_name: 'Wellness Forever, Lajpat Nagar', total: 220, status: 'confirmed', created_at: '2026-09-24T09:00:00Z' },
+    { _id: 'ORD004', medicine_name: 'Cetirizine 10mg × 3', pharmacy_name: 'Apollo Pharmacy, Janakpuri', total: 96, status: 'dispatched', created_at: '2026-09-25T11:00:00Z' },
+    { _id: 'ORD005', medicine_name: 'Omeprazole 20mg × 1', pharmacy_name: 'LifeCare Pharmacy, Dwarka', total: 48, status: 'cancelled', created_at: '2026-09-18T16:00:00Z' },
+  ];
+
+  const statusConfig = {
+    pending:    { cls: 'bg-warning-subtle text-warning',   icon: 'bi-clock',           label: 'Pending' },
+    confirmed:  { cls: 'bg-primary-subtle text-primary',   icon: 'bi-check-circle',    label: 'Confirmed' },
+    dispatched: { cls: 'bg-info-subtle text-info',          icon: 'bi-truck',           label: 'Dispatched' },
+    delivered:  { cls: 'bg-success-subtle text-success',   icon: 'bi-check2-all',      label: 'Delivered' },
+    cancelled:  { cls: 'bg-danger-subtle text-danger',     icon: 'bi-x-circle',        label: 'Cancelled' },
+  };
+
+  function renderOrders(orders) {
+    if (!orders.length) return null;
+    return orders.map(o => {
+      const s = statusConfig[o.status] || { cls: 'bg-secondary-subtle text-secondary', icon: 'bi-question', label: o.status };
+      const date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      return `
+        <div class="dash-card mb-3 order-card">
+          <div class="p-4">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="fw-700 text-primary">#${o._id}</span>
+                  <span class="badge ${s.cls}"><i class="bi ${s.icon} me-1"></i>${s.label}</span>
+                </div>
+                <div class="fw-600 mb-1">${o.medicine_name}</div>
+                <div class="text-muted small"><i class="bi bi-shop me-1"></i>${o.pharmacy_name}</div>
+                <div class="text-muted small mt-1"><i class="bi bi-calendar3 me-1"></i>${date}</div>
+              </div>
+              <div class="text-end">
+                <div class="fw-700 fs-5 text-primary">₹${o.total?.toFixed(2) || '—'}</div>
+                <div class="d-flex gap-2 mt-2 justify-content-end flex-wrap">
+                  ${o.status === 'pending' ? `<button class="btn btn-sm btn-outline-danger cancel-order-btn" data-id="${o._id}">Cancel</button>` : ''}
+                  <button class="btn btn-sm btn-outline-primary">View Details</button>
+                </div>
+              </div>
+            </div>
+            <!-- Progress tracker -->
+            <div class="order-progress mt-3">
+              ${['pending','confirmed','dispatched','delivered'].map((step, i) => {
+                const steps = ['pending','confirmed','dispatched','delivered'];
+                const currentIdx = steps.indexOf(o.status);
+                const done = i <= currentIdx && o.status !== 'cancelled';
+                return `<div class="order-progress-step ${done ? 'done' : ''}">
+                  <div class="order-progress-dot"></div>
+                  <div class="order-progress-label">${step.charAt(0).toUpperCase()+step.slice(1)}</div>
+                </div>`;
+              }).join('<div class="order-progress-line"></div>')}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  let currentFilter = '';
+  async function loadOrders() {
+    const loader = document.getElementById('ordersLoader');
+    const list   = document.getElementById('ordersList');
+    const empty  = document.getElementById('ordersEmpty');
+    loader.classList.remove('d-none');
+    list.classList.add('d-none');
+    empty.classList.add('d-none');
+
+    const token = localStorage.getItem('mf_access');
+    let orders = [];
+    try {
+      const params = new URLSearchParams({ ...(currentFilter && { status: currentFilter }) });
+      const res = await fetch(`/api/orders?${params}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(r => r.json());
+      orders = res.data || res.orders || [];
+    } catch (_) {
+      orders = currentFilter ? demoOrders.filter(o => o.status === currentFilter) : demoOrders;
+    }
+
+    loader.classList.add('d-none');
+    const html = renderOrders(orders);
+    if (!html) { empty.classList.remove('d-none'); return; }
+    list.innerHTML = html;
+    list.classList.remove('d-none');
+  }
+
+  // Tab switching
+  document.querySelectorAll('.order-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilter = tab.dataset.status;
+      loadOrders();
+    });
+  });
+
+  loadOrders();
+})();
+</script>
+{% endblock %}

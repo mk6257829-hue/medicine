@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar admin-sidebar" id="dashSidebar">
+    <div class="dash-sidebar-brand">
+      <div class="brand-icon brand-icon-sm"><i class="bi bi-capsule-pill"></i></div>
+      <span class="fw-700">Medi<span class="brand-accent">Find</span> <span class="badge bg-danger ms-1" style="font-size:.6rem;">Admin</span></span>
+    </div>
+    <nav class="dash-nav mt-4">
+      <div class="dash-nav-section-label">Overview</div>
+      <a href="/admin/dashboard"    class="dash-nav-link active"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+
+      <div class="dash-nav-section-label mt-2">Management</div>
+      <a href="/admin/users"        class="dash-nav-link"><i class="bi bi-people"></i><span>Users</span></a>
+      <a href="/admin/pharmacies"   class="dash-nav-link"><i class="bi bi-shop"></i><span>Pharmacies</span></a>
+      <a href="/admin/medical-stores" class="dash-nav-link"><i class="bi bi-geo-alt"></i><span>Gangoh Directory</span></a>
+      <a href="/admin/medicines"    class="dash-nav-link"><i class="bi bi-capsule"></i><span>Medicines</span></a>
+      <a href="/admin/inventory"    class="dash-nav-link"><i class="bi bi-box-seam"></i><span>Inventory</span></a>
+      <a href="/admin/orders"       class="dash-nav-link"><i class="bi bi-bag"></i><span>Orders</span></a>
+      <a href="/admin/prescriptions"class="dash-nav-link"><i class="bi bi-file-medical"></i><span>Prescriptions</span></a>
+
+      <div class="dash-nav-section-label mt-2">Reports</div>
+      <a href="/admin/reports"      class="dash-nav-link"><i class="bi bi-bar-chart"></i><span>Reports</span></a>
+      <a href="/admin/audit-logs"   class="dash-nav-link"><i class="bi bi-journal-text"></i><span>Audit Logs</span></a>
+
+      <div class="dash-nav-divider"></div>
+      <a href="/" class="dash-nav-link"><i class="bi bi-house"></i><span>Back to Site</span></a>
+      <button class="dash-nav-link text-danger border-0 bg-transparent w-100 text-start" id="adminLogoutBtn">
+        <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+      </button>
+    </nav>
+  </aside>
+  <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+  <main class="dashboard-main">
+    <div class="dash-topbar">
+      <button class="dash-menu-toggle d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <div class="dash-topbar-title">Admin Dashboard</div>
+      <div class="dash-topbar-right">
+        <span class="badge bg-danger-subtle text-danger px-3 py-2">
+          <i class="bi bi-shield-check me-1"></i>Admin Mode
+        </span>
+      </div>
+    </div>
+
+    <div class="dash-content">
+      <!-- Welcome -->
+      <div class="dash-welcome-banner mb-4" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">
+        <div>
+          <div class="text-white opacity-75 small">Admin Panel</div>
+          <h2 class="fw-700 mb-0 mt-1 text-white">Platform Overview</h2>
+        </div>
+        <a href="/admin/reports" class="btn btn-light btn-sm">
+          <i class="bi bi-bar-chart me-1"></i>View Reports
+        </a>
+      </div>
+
+      <!-- KPI Stats -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-blue">
+            <div class="dash-stat-icon"><i class="bi bi-people"></i></div>
+            <div class="dash-stat-val" id="statUsers">—</div>
+            <div class="dash-stat-label">Total Users</div>
+            <div class="dash-stat-delta text-success small mt-1" id="deltaUsers">↑ Loading…</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-green">
+            <div class="dash-stat-icon"><i class="bi bi-shop"></i></div>
+            <div class="dash-stat-val" id="statPharmacies">—</div>
+            <div class="dash-stat-label">Active Pharmacies</div>
+            <div class="dash-stat-delta text-success small mt-1" id="deltaPharmacies">↑ Loading…</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-orange">
+            <div class="dash-stat-icon"><i class="bi bi-bag"></i></div>
+            <div class="dash-stat-val" id="statOrders">—</div>
+            <div class="dash-stat-label">Total Orders</div>
+            <div class="dash-stat-delta text-success small mt-1" id="deltaOrders">↑ Loading…</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-purple">
+            <div class="dash-stat-icon"><i class="bi bi-capsule"></i></div>
+            <div class="dash-stat-val" id="statMedicines">—</div>
+            <div class="dash-stat-label">Medicines Listed</div>
+            <div class="dash-stat-delta text-success small mt-1" id="deltaMedicines">↑ Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Recent Users -->
+        <div class="col-lg-6">
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <span class="fw-600">Recent Users</span>
+              <a href="/admin/users" class="btn btn-link btn-sm p-0">View all →</a>
+            </div>
+            <div id="adminRecentUsers">
+              <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Approvals -->
+        <div class="col-lg-6">
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <span class="fw-600">Pending Pharmacy Approvals</span>
+              <span class="badge bg-warning-subtle text-warning" id="pendingApprovalsCount">—</span>
+            </div>
+            <div id="adminPendingApprovals">
+              <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick admin actions -->
+        <div class="col-12">
+          <div class="dash-card">
+            <div class="dash-card-header"><span class="fw-600">Quick Admin Actions</span></div>
+            <div class="row g-3 p-3">
+              <div class="col-md-3 col-6">
+                <a href="/admin/users" class="admin-quick-card text-center d-block text-decoration-none p-3">
+                  <i class="bi bi-person-plus text-primary fs-2"></i>
+                  <div class="fw-600 small mt-2">Manage Users</div>
+                </a>
+              </div>
+              <div class="col-md-3 col-6">
+                <a href="/admin/pharmacies" class="admin-quick-card text-center d-block text-decoration-none p-3">
+                  <i class="bi bi-shop-window text-success fs-2"></i>
+                  <div class="fw-600 small mt-2">Approve Pharmacies</div>
+                </a>
+              </div>
+              <div class="col-md-3 col-6">
+                <a href="/admin/medicines" class="admin-quick-card text-center d-block text-decoration-none p-3">
+                  <i class="bi bi-capsule text-warning fs-2"></i>
+                  <div class="fw-600 small mt-2">Add Medicine</div>
+                </a>
+              </div>
+              <div class="col-md-3 col-6">
+                <a href="/admin/reports" class="admin-quick-card text-center d-block text-decoration-none p-3">
+                  <i class="bi bi-file-earmark-bar-graph text-info fs-2"></i>
+                  <div class="fw-600 small mt-2">View Reports</div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+  document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  });
+
+  // Load stats
+  async function loadAdminStats() {
+    const token = localStorage.getItem('mf_access');
+    try {
+      const res = await fetch('/api/admin/dashboard', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json());
+      if (res.success && res.data) {
+        const d = res.data;
+        document.getElementById('statUsers').textContent      = d.total_users?.toLocaleString()      || '—';
+        document.getElementById('statPharmacies').textContent = d.active_pharmacies?.toLocaleString() || '—';
+        document.getElementById('statOrders').textContent     = d.total_orders?.toLocaleString()      || '—';
+        document.getElementById('statMedicines').textContent  = d.total_medicines?.toLocaleString()   || '—';
+        return;
+      }
+    } catch (_) {}
+    // Demo
+    document.getElementById('statUsers').textContent      = '12,450';
+    document.getElementById('statPharmacies').textContent = '534';
+    document.getElementById('statOrders').textContent     = '89,201';
+    document.getElementById('statMedicines').textContent  = '10,234';
+    document.getElementById('deltaUsers').textContent      = '↑ +234 this week';
+    document.getElementById('deltaPharmacies').textContent = '↑ +12 pending approval';
+    document.getElementById('deltaOrders').textContent     = '↑ +1,234 this week';
+    document.getElementById('deltaMedicines').textContent  = '↑ +89 new listings';
+  }
+
+  // Demo recent users
+  function loadRecentUsers() {
+    const users = [
+      { name: 'Rohan Sharma', email: 'rohan@example.com', role: 'user', joined: '25 Sep 2026' },
+      { name: 'Priya Mehta', email: 'priya@example.com', role: 'pharmacy', joined: '25 Sep 2026' },
+      { name: 'Arjun Singh', email: 'arjun@example.com', role: 'user', joined: '24 Sep 2026' },
+      { name: 'Sunita Rao', email: 'sunita@example.com', role: 'user', joined: '24 Sep 2026' },
+    ];
+    const roleBadge = r => r === 'pharmacy' ? 'bg-success-subtle text-success' : r === 'admin' ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary';
+    document.getElementById('adminRecentUsers').innerHTML = `
+      <table class="table table-hover mb-0 small">
+        <thead><tr class="text-muted"><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th></tr></thead>
+        <tbody>${users.map(u => `<tr>
+          <td class="fw-600">${u.name}</td>
+          <td class="text-muted">${u.email}</td>
+          <td><span class="badge ${roleBadge(u.role)}">${u.role}</span></td>
+          <td class="text-muted">${u.joined}</td>
+          <td><a href="/admin/users" class="btn btn-sm btn-outline-secondary py-0">View</a></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  // Demo pending approvals
+  function loadPendingApprovals() {
+    const pending = [
+      { name: 'HealthPlus Pharmacy', city: 'Mumbai', submitted: '24 Sep 2026' },
+      { name: 'MedCare Chemists', city: 'Pune', submitted: '23 Sep 2026' },
+    ];
+    document.getElementById('pendingApprovalsCount').textContent = pending.length;
+    document.getElementById('adminPendingApprovals').innerHTML = pending.length === 0
+      ? '<div class="text-center py-4 text-muted small">No pending approvals</div>'
+      : pending.map(p => `
+          <div class="d-flex align-items-center justify-content-between gap-3 p-3 border-bottom">
+            <div>
+              <div class="fw-600 small">${p.name}</div>
+              <div class="text-muted" style="font-size:.75rem;"><i class="bi bi-geo-alt me-1"></i>${p.city} · ${p.submitted}</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-success py-0">Approve</button>
+              <button class="btn btn-sm btn-outline-danger py-0">Reject</button>
+            </div>
+          </div>`).join('');
+  }
+
+  document.getElementById('adminLogoutBtn')?.addEventListener('click', () => {
+    localStorage.clear(); window.location.href = '/login';
+  });
+
+  loadAdminStats();
+  loadRecentUsers();
+  loadPendingApprovals();
+})();
+</script>
+{% endblock %}

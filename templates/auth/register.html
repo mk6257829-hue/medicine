@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% block title %}Create Account — MediFind{% endblock %}
+{% block meta_description %}Register on MediFind to search medicines, upload prescriptions and connect with nearby verified pharmacies.{% endblock %}
+
+{% block footer_attrs %}style="display:none"{% endblock %}
+
+{% block content %}
+<section class="auth-section" id="registerSection">
+  <div class="auth-bg-shapes">
+    <div class="auth-shape auth-shape-1"></div>
+    <div class="auth-shape auth-shape-2"></div>
+    <div class="auth-shape auth-shape-3"></div>
+  </div>
+
+  <div class="container">
+    <div class="row min-vh-100 align-items-center justify-content-center py-5">
+      <div class="col-xl-10 col-lg-11">
+        <div class="auth-card row g-0 overflow-hidden">
+
+          <!-- ── Left Panel (Branding) ────────────────────────────────── -->
+          <div class="col-lg-5 auth-panel-left d-none d-lg-flex flex-column justify-content-between p-5">
+            <div>
+              <a href="/" class="d-flex align-items-center gap-2 mb-5 text-decoration-none">
+                <div class="brand-icon brand-icon-sm">
+                  <i class="bi bi-capsule-pill"></i>
+                </div>
+                <span class="fw-700 fs-4 text-white">Medi<span class="brand-accent">Find</span></span>
+              </a>
+              <h2 class="text-white fw-700 mb-3" style="font-size:2rem;line-height:1.3;">
+                Join 50,000+<br>users today.
+              </h2>
+              <p class="text-white" style="opacity:.8;font-size:.95rem;">
+                Register as a patient or pharmacy and start using MediFind — India's fastest-growing medicine discovery platform.
+              </p>
+            </div>
+
+            <!-- Role cards -->
+            <div class="d-flex flex-column gap-3 mt-4">
+              <div class="auth-role-card">
+                <i class="bi bi-person-heart text-white fs-4 me-3"></i>
+                <div>
+                  <div class="fw-600 text-white">Patient</div>
+                  <div style="font-size:.8rem;opacity:.7;color:#fff;">Search meds, upload prescriptions, place orders</div>
+                </div>
+              </div>
+              <div class="auth-role-card">
+                <i class="bi bi-shop text-white fs-4 me-3"></i>
+                <div>
+                  <div class="fw-600 text-white">Pharmacy</div>
+                  <div style="font-size:.8rem;opacity:.7;color:#fff;">Manage inventory, accept orders, grow your reach</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Right Panel (Form) ──────────────────────────────────── -->
+          <div class="col-lg-7 auth-panel-right p-4 p-sm-5">
+            <!-- Mobile brand -->
+            <a href="/" class="d-flex d-lg-none align-items-center gap-2 mb-4 text-decoration-none">
+              <div class="brand-icon brand-icon-sm">
+                <i class="bi bi-capsule-pill"></i>
+              </div>
+              <span class="fw-700 fs-5">Medi<span class="brand-accent">Find</span></span>
+            </a>
+
+            <div class="mb-4">
+              <h1 class="auth-form-title">Create your account</h1>
+              <p class="text-muted">Get started with MediFind for free</p>
+            </div>
+
+            <!-- Alert -->
+            <div id="registerAlert" class="alert d-none mb-3" role="alert"></div>
+
+            <!-- Role toggle -->
+            <div class="role-toggle-wrap mb-4" role="group" aria-label="Account type">
+              <button type="button" class="role-toggle-btn active" id="roleUser" data-role="user">
+                <i class="bi bi-person me-2"></i>Patient
+              </button>
+              <button type="button" class="role-toggle-btn" id="rolePharmacy" data-role="pharmacy">
+                <i class="bi bi-shop me-2"></i>Pharmacy
+              </button>
+            </div>
+
+            <!-- Form -->
+            <form id="registerForm" novalidate>
+              <input type="hidden" id="selectedRole" name="role" value="user" />
+
+              <div class="row g-3">
+                <!-- Name -->
+                <div class="col-sm-6">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regFirstName">First Name</label>
+                    <div class="auth-input-wrap">
+                      <i class="bi bi-person auth-input-icon"></i>
+                      <input type="text" id="regFirstName" name="first_name" class="auth-input form-control"
+                             placeholder="John" required autocomplete="given-name" />
+                    </div>
+                    <div class="invalid-feedback">Required.</div>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regLastName">Last Name</label>
+                    <div class="auth-input-wrap">
+                      <i class="bi bi-person auth-input-icon"></i>
+                      <input type="text" id="regLastName" name="last_name" class="auth-input form-control"
+                             placeholder="Doe" required autocomplete="family-name" />
+                    </div>
+                    <div class="invalid-feedback">Required.</div>
+                  </div>
+                </div>
+
+                <!-- Pharmacy name (shown only for pharmacy role) -->
+                <div class="col-12 d-none" id="pharmacyNameGroup">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regPharmacyName">Pharmacy Name</label>
+                    <div class="auth-input-wrap">
+                      <i class="bi bi-shop auth-input-icon"></i>
+                      <input type="text" id="regPharmacyName" name="pharmacy_name" class="auth-input form-control"
+                             placeholder="Apollo Pharmacy, New Delhi" autocomplete="organization" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Email -->
+                <div class="col-12">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regEmail">Email Address</label>
+                    <div class="auth-input-wrap">
+                      <i class="bi bi-envelope auth-input-icon"></i>
+                      <input type="email" id="regEmail" name="email" class="auth-input form-control"
+                             placeholder="you@example.com" required autocomplete="email" />
+                    </div>
+                    <div class="invalid-feedback">Please enter a valid email.</div>
+                  </div>
+                </div>
+
+                <!-- Phone -->
+                <div class="col-12">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regPhone">Phone Number</label>
+                    <div class="auth-input-wrap">
+                      <i class="bi bi-telephone auth-input-icon"></i>
+                      <input type="tel" id="regPhone" name="phone" class="auth-input form-control"
+                             placeholder="+91 98765 43210" required autocomplete="tel" />
+                    </div>
+                    <div class="invalid-feedback">Required.</div>
+                  </div>
+                </div>
+
+                <!-- Password -->
+                <div class="col-sm-6">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regPassword">Password</label>
+                    <div class="auth-input-wrap">
+                      <i class="bi bi-lock auth-input-icon"></i>
+                      <input type="password" id="regPassword" name="password" class="auth-input form-control"
+                             placeholder="Min 8 characters" required minlength="8" autocomplete="new-password" />
+                      <button type="button" class="auth-toggle-pass" id="toggleRegPass" aria-label="Toggle">
+                        <i class="bi bi-eye" id="toggleRegPassIcon"></i>
+                      </button>
+                    </div>
+                    <div class="invalid-feedback">Min 8 characters.</div>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regConfirmPassword">Confirm Password</label>
+                    <div class="auth-input-wrap">
+                      <i class="bi bi-lock-fill auth-input-icon"></i>
+                      <input type="password" id="regConfirmPassword" name="confirm_password" class="auth-input form-control"
+                             placeholder="Repeat password" required autocomplete="new-password" />
+                    </div>
+                    <div class="invalid-feedback">Passwords don't match.</div>
+                  </div>
+                </div>
+
+                <!-- Password strength -->
+                <div class="col-12">
+                  <div class="pass-strength-bar">
+                    <div class="pass-strength-fill" id="passStrengthFill"></div>
+                  </div>
+                  <small id="passStrengthText" class="text-muted">Enter a password</small>
+                </div>
+
+                <!-- Terms -->
+                <div class="col-12">
+                  <div class="form-check auth-check">
+                    <input class="form-check-input" type="checkbox" id="agreeTerms" name="agree_terms" required />
+                    <label class="form-check-label text-muted" for="agreeTerms">
+                      I agree to MediFind's <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a>
+                    </label>
+                    <div class="invalid-feedback">You must agree to continue.</div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100 auth-submit-btn mt-4" id="registerSubmitBtn">
+                <span id="regBtnText">
+                  <i class="bi bi-person-plus me-2"></i>Create Account
+                </span>
+                <span id="regBtnLoader" class="d-none">
+                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  Creating account…
+                </span>
+              </button>
+            </form>
+
+            <!-- Login link -->
+            <p class="text-center mt-4 mb-0 text-muted">
+              Already have an account?
+              <a href="/login" class="auth-link fw-600">Sign in</a>
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
+
+  // Role toggle
+  const roleButtons = document.querySelectorAll('.role-toggle-btn');
+  const roleInput   = document.getElementById('selectedRole');
+  const pharmacyGrp = document.getElementById('pharmacyNameGroup');
+  roleButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      roleButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      roleInput.value = btn.dataset.role;
+      pharmacyGrp.classList.toggle('d-none', btn.dataset.role !== 'pharmacy');
+    });
+  });
+
+  // Toggle passwords
+  document.getElementById('toggleRegPass')?.addEventListener('click', () => {
+    const inp = document.getElementById('regPassword');
+    const ico = document.getElementById('toggleRegPassIcon');
+    const vis = inp.type === 'password';
+    inp.type = vis ? 'text' : 'password';
+    ico.className = vis ? 'bi bi-eye-slash' : 'bi bi-eye';
+  });
+
+  // Password strength
+  document.getElementById('regPassword')?.addEventListener('input', function () {
+    const v = this.value;
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const fill = document.getElementById('passStrengthFill');
+    const text = document.getElementById('passStrengthText');
+    const map = [
+      { pct: '0%',   cls: '',          label: 'Enter a password' },
+      { pct: '25%',  cls: 'weak',      label: 'Weak' },
+      { pct: '50%',  cls: 'fair',      label: 'Fair' },
+      { pct: '75%',  cls: 'good',      label: 'Good' },
+      { pct: '100%', cls: 'strong',    label: 'Strong ✓' },
+    ];
+    const s = map[score];
+    fill.style.width = s.pct;
+    fill.className = 'pass-strength-fill ' + s.cls;
+    text.textContent = s.label;
+  });
+
+  // Alert
+  function showAlert(msg, type = 'danger') {
+    const el = document.getElementById('registerAlert');
+    el.className = `alert alert-${type} d-flex align-items-center gap-2`;
+    el.innerHTML = `<i class="bi bi-${type === 'danger' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i><span>${msg}</span>`;
+  }
+
+  function setLoading(loading) {
+    document.getElementById('regBtnText').classList.toggle('d-none', loading);
+    document.getElementById('regBtnLoader').classList.toggle('d-none', !loading);
+    document.getElementById('registerSubmitBtn').disabled = loading;
+  }
+
+  // Submit
+  const form = document.getElementById('registerForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // Custom confirm password validation
+    const pass    = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirmPassword').value;
+    if (pass !== confirm) {
+      document.getElementById('regConfirmPassword').setCustomValidity('mismatch');
+    } else {
+      document.getElementById('regConfirmPassword').setCustomValidity('');
+    }
+
+    if (!form.checkValidity()) { form.classList.add('was-validated'); return; }
+    setLoading(true);
+
+    const payload = {
+      first_name: document.getElementById('regFirstName').value.trim(),
+      last_name:  document.getElementById('regLastName').value.trim(),
+      email:      document.getElementById('regEmail').value.trim(),
+      phone:      document.getElementById('regPhone').value.trim(),
+      password:   pass,
+      role:       document.getElementById('selectedRole').value,
+    };
+    const pName = document.getElementById('regPharmacyName').value.trim();
+    if (pName) payload.pharmacy_name = pName;
+
+    try {
+      // Backend expects 'name' (not first_name/last_name) and uppercase role
+      const roleMap = { user: 'USER', pharmacy: 'PHARMACY_OWNER' };
+      const fullName = [
+        document.getElementById('regFirstName').value.trim(),
+        document.getElementById('regLastName').value.trim(),
+      ].filter(Boolean).join(' ');
+
+      const sendPayload = {
+        name:     fullName,
+        email:    document.getElementById('regEmail').value.trim(),
+        phone:    document.getElementById('regPhone').value.trim(),
+        password: pass,
+        role:     roleMap[document.getElementById('selectedRole').value] || 'USER',
+      };
+      const pName = document.getElementById('regPharmacyName').value.trim();
+      if (pName) sendPayload.pharmacy_name = pName;
+
+      let httpRes, json;
+      if (window.API) {
+        const result = await window.API.post('/auth/register', sendPayload, { silent: true });
+        json = result.data;
+      } else {
+        httpRes = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sendPayload),
+        });
+        json = await httpRes.json();
+      }
+
+      if (json && json.success) {
+        showAlert('Account created! Redirecting to login…', 'success');
+        setTimeout(() => { window.location.href = '/login'; }, 1200);
+      } else {
+        showAlert(json?.message || 'Registration failed. Please try again.');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      showAlert('Connection error — make sure the server is running and try again.');
+      setLoading(false);
+    }
+  });
+})();
+</script>
+{% endblock %}

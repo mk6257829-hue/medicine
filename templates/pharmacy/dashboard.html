@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Pharmacy Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  <aside class="dashboard-sidebar" id="dashSidebar" style="background:linear-gradient(180deg,#0f766e 0%,#0d9488 100%);">
+    <div class="dash-sidebar-brand" style="border-bottom-color:rgba(255,255,255,.12);">
+      <div class="brand-icon brand-icon-sm"><i class="bi bi-capsule-pill"></i></div>
+      <span class="fw-700 text-white">Medi<span class="brand-accent">Find</span> <span class="badge bg-white text-success ms-1" style="font-size:.6rem;">Pharmacy</span></span>
+    </div>
+    <nav class="dash-nav mt-4">
+      <a href="/pharmacy/dashboard"    class="dash-nav-link active" style="color:rgba(255,255,255,.8);">
+        <i class="bi bi-grid"></i><span>Dashboard</span>
+      </a>
+      <a href="/pharmacy/inventory"    class="dash-nav-link" style="color:rgba(255,255,255,.65);">
+        <i class="bi bi-box-seam"></i><span>Inventory</span>
+      </a>
+      <a href="/pharmacy/orders"       class="dash-nav-link" style="color:rgba(255,255,255,.65);">
+        <i class="bi bi-bag"></i><span>Orders</span>
+      </a>
+      <a href="/pharmacy/prescriptions"class="dash-nav-link" style="color:rgba(255,255,255,.65);">
+        <i class="bi bi-file-medical"></i><span>Prescriptions</span>
+      </a>
+      <a href="/pharmacy/analytics"    class="dash-nav-link" style="color:rgba(255,255,255,.65);">
+        <i class="bi bi-bar-chart"></i><span>Analytics</span>
+      </a>
+      <a href="/pharmacy/profile"      class="dash-nav-link" style="color:rgba(255,255,255,.65);">
+        <i class="bi bi-shop"></i><span>Pharmacy Profile</span>
+      </a>
+      <div class="dash-nav-divider" style="background:rgba(255,255,255,.12);"></div>
+      <a href="/" class="dash-nav-link" style="color:rgba(255,255,255,.65);">
+        <i class="bi bi-house"></i><span>Back to Site</span>
+      </a>
+      <button class="dash-nav-link border-0 bg-transparent w-100 text-start" style="color:rgba(255,99,99,.8);" id="pharmLogoutBtn">
+        <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+      </button>
+    </nav>
+  </aside>
+  <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+  <main class="dashboard-main">
+    <div class="dash-topbar">
+      <button class="dash-menu-toggle d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <div class="dash-topbar-title">Pharmacy Dashboard</div>
+      <div class="dash-topbar-right">
+        <span class="badge bg-success-subtle text-success px-3 py-2">
+          <i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>Online
+        </span>
+        <a href="/pharmacy/inventory/add" class="btn btn-primary btn-sm">
+          <i class="bi bi-plus-lg me-1"></i>Add Medicine
+        </a>
+      </div>
+    </div>
+
+    <div class="dash-content">
+      <!-- Welcome -->
+      <div class="dash-welcome-banner mb-4" style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 100%);">
+        <div>
+          <div class="text-white opacity-75 small">Pharmacy Portal</div>
+          <h2 class="fw-700 mb-0 mt-1 text-white" id="pharmWelcome">Welcome back!</h2>
+        </div>
+        <a href="/pharmacy/inventory" class="btn btn-light btn-sm">
+          <i class="bi bi-box-seam me-1"></i>Manage Inventory
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-blue">
+            <div class="dash-stat-icon"><i class="bi bi-bag"></i></div>
+            <div class="dash-stat-val" id="pharmStatOrders">—</div>
+            <div class="dash-stat-label">Today's Orders</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-green">
+            <div class="dash-stat-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="dash-stat-val" id="pharmStatInventory">—</div>
+            <div class="dash-stat-label">Medicines in Stock</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-orange">
+            <div class="dash-stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="dash-stat-val" id="pharmStatLow">—</div>
+            <div class="dash-stat-label">Low Stock Alerts</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="dash-stat-card dash-stat-purple">
+            <div class="dash-stat-icon"><i class="bi bi-currency-rupee"></i></div>
+            <div class="dash-stat-val" id="pharmStatRevenue">—</div>
+            <div class="dash-stat-label">Today's Revenue</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Pending Orders -->
+        <div class="col-lg-7">
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <span class="fw-600">Pending Orders</span>
+              <a href="/pharmacy/orders" class="btn btn-link btn-sm p-0">View all →</a>
+            </div>
+            <div id="pharmOrdersList">
+              <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div class="col-lg-5">
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <span class="fw-600">⚠️ Low Stock Alerts</span>
+              <a href="/pharmacy/inventory" class="btn btn-link btn-sm p-0">Manage →</a>
+            </div>
+            <div id="pharmLowStockList">
+              <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+  document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  });
+
+  // Demo data
+  setTimeout(() => {
+    document.getElementById('pharmStatOrders').textContent    = '12';
+    document.getElementById('pharmStatInventory').textContent = '1,247';
+    document.getElementById('pharmStatLow').textContent       = '5';
+    document.getElementById('pharmStatRevenue').textContent   = '₹8.4K';
+
+    const orders = [
+      { id: 'ORD2501', patient: 'Rohan Sharma', medicine: 'Paracetamol 500mg × 2', time: '10 mins ago', status: 'pending' },
+      { id: 'ORD2502', patient: 'Priya Nair', medicine: 'Amoxicillin 250mg × 1', time: '22 mins ago', status: 'confirmed' },
+      { id: 'ORD2503', patient: 'Arjun Singh', medicine: 'Cetirizine 10mg × 3', time: '1 hr ago', status: 'pending' },
+    ];
+    document.getElementById('pharmOrdersList').innerHTML = `
+      <table class="table table-hover mb-0 small">
+        <thead><tr class="text-muted"><th class="ps-3">Order</th><th>Patient</th><th>Medicine</th><th>Time</th><th>Action</th></tr></thead>
+        <tbody>${orders.map(o => `<tr>
+          <td class="ps-3 fw-600 text-primary">#${o.id}</td>
+          <td>${o.patient}</td>
+          <td class="text-muted">${o.medicine}</td>
+          <td class="text-muted">${o.time}</td>
+          <td><button class="btn btn-sm btn-success py-0">Accept</button></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+
+    const lowStock = [
+      { name: 'Metformin 500mg', stock: 5 },
+      { name: 'Atorvastatin 10mg', stock: 3 },
+      { name: 'Omeprazole 20mg', stock: 8 },
+      { name: 'Losartan 50mg', stock: 2 },
+      { name: 'Amlodipine 5mg', stock: 6 },
+    ];
+    document.getElementById('pharmLowStockList').innerHTML = `<div class="p-3">` +
+      lowStock.map(m => `<div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+        <div class="small fw-500">${m.name}</div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-warning-subtle text-warning">${m.stock} left</span>
+          <a href="/pharmacy/inventory" class="btn btn-sm btn-outline-primary py-0" style="font-size:.7rem;">Restock</a>
+        </div>
+      </div>`).join('') + '</div>';
+  }, 800);
+
+  document.getElementById('pharmLogoutBtn')?.addEventListener('click', () => {
+    localStorage.clear(); window.location.href = '/login';
+  });
+})();
+</script>
+{% endblock %}

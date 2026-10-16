@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Browse Pharmacies{% endblock %}
+{% block meta_description %}Find verified pharmacies near you. Check medicine availability, ratings and contact information on MediFind.{% endblock %}
+
+{% block content %}
+<section class="page-header-section">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <nav aria-label="breadcrumb" class="mb-2">
+          <ol class="breadcrumb mb-0" style="font-size:.85rem;">
+            <li class="breadcrumb-item"><a href="/" class="text-white opacity-75">Home</a></li>
+            <li class="breadcrumb-item active text-white">Pharmacies</li>
+          </ol>
+        </nav>
+        <h1 class="page-header-title">Find a Pharmacy</h1>
+        <p class="page-header-sub">500+ verified pharmacies across India</p>
+      </div>
+      <div class="col-lg-5 d-none d-lg-flex justify-content-end">
+        <button class="btn btn-light px-4" id="locateMeBtn">
+          <i class="bi bi-geo-alt-fill text-primary me-2"></i>Use My Location
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <!-- Search & Filter bar -->
+    <div class="dash-card mb-4 p-3">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-5">
+          <div class="auth-input-wrap">
+            <i class="bi bi-search auth-input-icon"></i>
+            <input type="text" id="pharmacySearch" class="auth-input form-control" placeholder="Search pharmacy name or area…" />
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="cityFilter">
+            <option value="">All Cities</option>
+            <option value="delhi">New Delhi</option>
+            <option value="mumbai">Mumbai</option>
+            <option value="bengaluru">Bengaluru</option>
+            <option value="pune">Pune</option>
+            <option value="hyderabad">Hyderabad</option>
+            <option value="chennai">Chennai</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" id="openFilter">
+            <option value="">Any Status</option>
+            <option value="open">Open Now</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" id="pharmacySearchBtn">
+            <i class="bi bi-search me-1"></i>Search
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results count -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <span class="text-muted small" id="pharmacyCount">Loading pharmacies…</span>
+      <select class="form-select form-select-sm" id="pharmacySortSelect" style="width:auto;">
+        <option value="distance">Sort: Nearest First</option>
+        <option value="rating">Sort: Highest Rated</option>
+        <option value="name">Sort: Name A-Z</option>
+      </select>
+    </div>
+
+    <!-- Grid -->
+    <div id="pharmacyLoader" class="row g-4">
+      {% for _ in range(6) %}
+      <div class="col-lg-4 col-md-6">
+        <div class="skeleton-card p-0" style="border-radius:var(--radius-lg);overflow:hidden;">
+          <div class="skeleton-block" style="height:120px;"></div>
+          <div class="p-3">
+            <div class="skeleton-block mb-2" style="height:14px;width:60%;"></div>
+            <div class="skeleton-block mb-3" style="height:12px;width:80%;"></div>
+            <div class="skeleton-block" style="height:36px;border-radius:8px;"></div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div id="pharmacyGrid" class="row g-4 d-none"></div>
+    <div id="pharmacyEmpty" class="d-none text-center py-5">
+      <i class="bi bi-shop" style="font-size:3.5rem;opacity:.2;"></i>
+      <h5 class="mt-3 text-muted">No pharmacies found</h5>
+      <p class="text-muted small">Try a different city or search term.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  const demoPharmacies = [
+    { _id: 'ph1', name: 'Apollo Pharmacy', address: 'Connaught Place, New Delhi', city: 'delhi', rating: 4.8, reviews: 234, is_open: true, distance_km: 1.2, medicines_count: 5000 },
+    { _id: 'ph2', name: 'MedPlus Pharmacy', address: 'Karol Bagh, New Delhi', city: 'delhi', rating: 4.5, reviews: 189, is_open: true, distance_km: 2.5, medicines_count: 3200 },
+    { _id: 'ph3', name: 'Wellness Forever', address: 'Lajpat Nagar, New Delhi', city: 'delhi', rating: 4.6, reviews: 145, is_open: false, distance_km: 3.8, medicines_count: 2800 },
+    { _id: 'ph4', name: 'Netmeds Store', address: 'Andheri West, Mumbai', city: 'mumbai', rating: 4.7, reviews: 312, is_open: true, distance_km: 4.1, medicines_count: 6000 },
+    { _id: 'ph5', name: 'HealthKart Pharmacy', address: 'Koramangala, Bengaluru', city: 'bengaluru', rating: 4.9, reviews: 421, is_open: true, distance_km: 5.0, medicines_count: 7500 },
+    { _id: 'ph6', name: 'LifeCare Chemists', address: 'Sector 18, Noida', city: 'delhi', rating: 4.3, reviews: 98, is_open: false, distance_km: 6.2, medicines_count: 1900 },
+  ];
+
+  function renderPharmacyCard(p) {
+    const stars = '★'.repeat(Math.floor(p.rating)) + (p.rating % 1 >= 0.5 ? '½' : '') + '☆'.repeat(5 - Math.ceil(p.rating));
+    return `
+      <div class="col-lg-4 col-md-6">
+        <div class="pharmacy-card">
+          <div class="pharmacy-card-header">
+            <div class="pharmacy-card-icon-wrap"><i class="bi bi-shop"></i></div>
+            <div class="flex-fill overflow-hidden">
+              <h3 class="fw-700 text-white mb-1" style="font-size:1rem;line-height:1.3;">${p.name}</h3>
+              <div class="text-white opacity-75 small text-truncate"><i class="bi bi-geo-alt me-1"></i>${p.address}</div>
+            </div>
+            <span class="badge ${p.is_open ? 'bg-success' : 'bg-secondary'} ms-2" style="flex-shrink:0;">
+              ${p.is_open ? 'Open' : 'Closed'}
+            </span>
+          </div>
+          <div class="p-3">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div>
+                <span class="text-warning" style="font-size:.9rem;">${'★'.repeat(Math.floor(p.rating))}</span>
+                <span class="fw-600 small ms-1">${p.rating}</span>
+                <span class="text-muted small">(${p.reviews} reviews)</span>
+              </div>
+              <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>${p.distance_km?.toFixed(1)} km</div>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="text-center">
+                <div class="fw-700 text-primary">${p.medicines_count?.toLocaleString()}</div>
+                <div class="text-muted" style="font-size:.7rem;">Medicines</div>
+              </div>
+              <div class="border-start ps-3">
+                <div class="fw-700 text-success">${p.is_open ? '24/7' : 'Closed'}</div>
+                <div class="text-muted" style="font-size:.7rem;">Status</div>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="/pharmacy/${p._id}" class="btn btn-primary btn-sm flex-fill">
+                <i class="bi bi-eye me-1"></i>View Details
+              </a>
+              <a href="tel:+911800000000" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-telephone"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function loadPharmacies() {
+    const loader = document.getElementById('pharmacyLoader');
+    const grid   = document.getElementById('pharmacyGrid');
+    const empty  = document.getElementById('pharmacyEmpty');
+    const count  = document.getElementById('pharmacyCount');
+
+    const q    = document.getElementById('pharmacySearch').value.trim().toLowerCase();
+    const city = document.getElementById('cityFilter').value;
+    const open = document.getElementById('openFilter').value;
+
+    try {
+      const params = new URLSearchParams({ ...(q && { q }), ...(city && { city }), ...(open && { is_open: true }) });
+      const res = await fetch(`/api/pharmacies?${params}`).then(r => r.json());
+      let pharmacies = res.data || res.pharmacies || [];
+      if (pharmacies.length) { render(pharmacies); return; }
+    } catch (_) {}
+
+    let pharmacies = [...demoPharmacies];
+    if (q) pharmacies = pharmacies.filter(p => p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q));
+    if (city) pharmacies = pharmacies.filter(p => p.city === city);
+    if (open) pharmacies = pharmacies.filter(p => p.is_open);
+    render(pharmacies);
+
+    function render(list) {
+      loader.classList.add('d-none');
+      count.textContent = `${list.length} pharmacies found`;
+      if (!list.length) { empty.classList.remove('d-none'); return; }
+      grid.innerHTML = list.map(renderPharmacyCard).join('');
+      grid.classList.remove('d-none');
+    }
+  }
+
+  document.getElementById('pharmacySearchBtn')?.addEventListener('click', loadPharmacies);
+  document.getElementById('pharmacySearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadPharmacies(); });
+  document.getElementById('locateMeBtn')?.addEventListener('click', () => {
+    navigator.geolocation?.getCurrentPosition(() => loadPharmacies(), () => alert('Location access denied.'));
+  });
+
+  loadPharmacies();
+})();
+</script>
+{% endblock %}

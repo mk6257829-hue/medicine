@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Admin — Manage Users{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  <aside class="dashboard-sidebar admin-sidebar" id="dashSidebar">
+    <div class="dash-sidebar-brand">
+      <div class="brand-icon brand-icon-sm"><i class="bi bi-capsule-pill"></i></div>
+      <span class="fw-700 text-white">Medi<span class="brand-accent">Find</span> <span class="badge bg-danger ms-1" style="font-size:.6rem;">Admin</span></span>
+    </div>
+    <nav class="dash-nav mt-4">
+      <a href="/admin/dashboard"    class="dash-nav-link"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+      <a href="/admin/users"        class="dash-nav-link active"><i class="bi bi-people"></i><span>Users</span></a>
+      <a href="/admin/pharmacies"   class="dash-nav-link"><i class="bi bi-shop"></i><span>Pharmacies</span></a>
+      <a href="/admin/medicines"    class="dash-nav-link"><i class="bi bi-capsule"></i><span>Medicines</span></a>
+      <a href="/admin/orders"       class="dash-nav-link"><i class="bi bi-bag"></i><span>Orders</span></a>
+      <a href="/admin/reports"      class="dash-nav-link"><i class="bi bi-bar-chart"></i><span>Reports</span></a>
+      <a href="/admin/audit-logs"   class="dash-nav-link"><i class="bi bi-journal-text"></i><span>Audit Logs</span></a>
+      <div class="dash-nav-divider"></div>
+      <a href="/" class="dash-nav-link"><i class="bi bi-house"></i><span>Back to Site</span></a>
+    </nav>
+  </aside>
+  <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
+
+  <main class="dashboard-main">
+    <div class="dash-topbar">
+      <button class="dash-menu-toggle d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <div class="dash-topbar-title">User Management</div>
+      <div class="dash-topbar-right">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+          <i class="bi bi-person-plus me-1"></i>Add User
+        </button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+      <!-- Filters -->
+      <div class="dash-card mb-4 p-3">
+        <div class="row g-3 align-items-center">
+          <div class="col-md-5">
+            <div class="auth-input-wrap">
+              <i class="bi bi-search auth-input-icon"></i>
+              <input type="text" id="userSearchInput" class="auth-input form-control" placeholder="Search by name or email…" />
+            </div>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="roleFilter">
+              <option value="">All Roles</option>
+              <option value="user">Patient</option>
+              <option value="pharmacy">Pharmacy</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select class="form-select" id="statusFilter">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100" id="userFilterBtn"><i class="bi bi-search me-1"></i>Filter</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="fw-600">All Users</span>
+          <span class="badge bg-primary-subtle text-primary" id="userTableCount">—</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="usersTable">
+            <thead class="table-light">
+              <tr class="small text-muted">
+                <th class="ps-4">User</th>
+                <th>Role</th>
+                <th>Phone</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.getElementById('dashSidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+
+  const demoUsers = [
+    { _id: 'u1', first_name: 'Rohan', last_name: 'Sharma', email: 'rohan@example.com', role: 'user', phone: '+91 98765 43210', created_at: '2026-09-25', is_active: true },
+    { _id: 'u2', first_name: 'Priya', last_name: 'Mehta', email: 'priya@pharmacy.com', role: 'pharmacy', phone: '+91 87654 32109', created_at: '2026-09-24', is_active: true },
+    { _id: 'u3', first_name: 'Arjun', last_name: 'Singh', email: 'arjun@example.com', role: 'user', phone: '+91 76543 21098', created_at: '2026-09-23', is_active: false },
+    { _id: 'u4', first_name: 'Sunita', last_name: 'Rao', email: 'sunita@example.com', role: 'user', phone: '+91 65432 10987', created_at: '2026-09-22', is_active: true },
+    { _id: 'u5', first_name: 'Admin', last_name: 'User', email: 'admin@medifind.in', role: 'admin', phone: '+91 54321 09876', created_at: '2026-01-01', is_active: true },
+  ];
+
+  const roleBadge = r => {
+    const m = { user: 'bg-primary-subtle text-primary', pharmacy: 'bg-success-subtle text-success', admin: 'bg-danger-subtle text-danger' };
+    return `<span class="badge ${m[r] || 'bg-secondary-subtle text-secondary'}">${r}</span>`;
+  };
+
+  function renderUsers(users) {
+    document.getElementById('userTableCount').textContent = users.length;
+    document.getElementById('usersTableBody').innerHTML = users.map(u => `
+      <tr>
+        <td class="ps-4">
+          <div class="d-flex align-items-center gap-2">
+            <div class="dash-user-avatar" style="width:32px;height:32px;font-size:.8rem;">${(u.first_name[0] || 'U').toUpperCase()}</div>
+            <div>
+              <div class="fw-600 small">${u.first_name} ${u.last_name}</div>
+              <div class="text-muted" style="font-size:.75rem;">${u.email}</div>
+            </div>
+          </div>
+        </td>
+        <td class="align-middle">${roleBadge(u.role)}</td>
+        <td class="align-middle small text-muted">${u.phone}</td>
+        <td class="align-middle small text-muted">${u.created_at}</td>
+        <td class="align-middle">
+          <span class="badge ${u.is_active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}">
+            ${u.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </td>
+        <td class="align-middle">
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-primary py-0">Edit</button>
+            <button class="btn btn-sm btn-outline-danger py-0 ${u.role === 'admin' ? 'disabled' : ''}">
+              ${u.is_active ? 'Deactivate' : 'Activate'}
+            </button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  async function loadUsers() {
+    const token = localStorage.getItem('mf_access');
+    const q = document.getElementById('userSearchInput').value.trim().toLowerCase();
+    const role = document.getElementById('roleFilter').value;
+    try {
+      const res = await fetch(`/api/admin/users?${new URLSearchParams({ ...(q && {q}), ...(role && {role}) })}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(r => r.json());
+      if (res.success && res.data) { renderUsers(res.data); return; }
+    } catch (_) {}
+    let users = [...demoUsers];
+    if (q) users = users.filter(u => `${u.first_name} ${u.last_name} ${u.email}`.toLowerCase().includes(q));
+    if (role) users = users.filter(u => u.role === role);
+    renderUsers(users);
+  }
+
+  document.getElementById('userFilterBtn')?.addEventListener('click', loadUsers);
+  document.getElementById('userSearchInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadUsers(); });
+  loadUsers();
+})();
+</script>
+{% endblock %}

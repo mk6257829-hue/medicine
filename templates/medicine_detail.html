@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block title %}Medicine Details{% endblock %}
+
+{% block content %}
+<div id="medicineDetailPage">
+
+<!-- Breadcrumb -->
+<div class="bg-white border-bottom py-3">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/medicines">Medicines</a></li>
+        <li class="breadcrumb-item active" id="detailBreadcrumb">Loading…</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<!-- Main Detail -->
+<section class="py-5" id="medicineDetailSection">
+  <div class="container">
+
+    <!-- Skeleton while loading -->
+    <div id="detailLoader" class="row g-4">
+      <div class="col-lg-4">
+        <div class="skeleton-block" style="height:300px;border-radius:20px;"></div>
+      </div>
+      <div class="col-lg-8">
+        <div class="skeleton-block mb-3" style="height:32px;width:60%;"></div>
+        <div class="skeleton-block mb-2" style="height:20px;width:40%;"></div>
+        <div class="skeleton-block mb-4" style="height:60px;"></div>
+        <div class="skeleton-block" style="height:200px;border-radius:12px;"></div>
+      </div>
+    </div>
+
+    <!-- Actual content -->
+    <div id="detailContent" class="d-none">
+      <div class="row g-4 align-items-start">
+
+        <!-- Image/Icon -->
+        <div class="col-lg-4">
+          <div class="medicine-detail-img-card text-center">
+            <div class="medicine-detail-icon-wrap">
+              <i class="bi bi-capsule-pill" id="detailIcon"></i>
+            </div>
+            <div class="mt-3">
+              <span class="badge rounded-pill px-3 py-2" id="detailAvailBadge"></span>
+            </div>
+            <div class="mt-2 text-muted small" id="detailRxNote"></div>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="col-lg-8">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="badge bg-primary-subtle text-primary" id="detailCategory"></span>
+            <span class="badge bg-secondary-subtle text-secondary" id="detailType"></span>
+          </div>
+          <h1 class="fw-800 mb-1" style="font-size:2rem;" id="detailName"></h1>
+          <p class="text-muted mb-3" id="detailGeneric"></p>
+
+          <div class="medicine-detail-price mb-4">
+            <span class="fw-700 fs-2 text-primary" id="detailPrice"></span>
+            <span class="text-muted small ms-2">per unit</span>
+          </div>
+
+          <p class="text-muted mb-4" id="detailDescription"></p>
+
+          <!-- Action buttons -->
+          <div class="d-flex flex-wrap gap-3 mb-4">
+            <button class="btn btn-primary px-4 py-2" id="checkAvailBtn">
+              <i class="bi bi-geo-alt me-2"></i>Check Availability Near Me
+            </button>
+            <button class="btn btn-outline-primary px-4 py-2" id="addToListBtn">
+              <i class="bi bi-bookmark me-2"></i>Save to List
+            </button>
+            <button class="btn btn-outline-secondary px-4 py-2" id="shareBtn">
+              <i class="bi bi-share me-2"></i>Share
+            </button>
+          </div>
+
+          <!-- Details table -->
+          <div class="detail-info-card">
+            <h6 class="fw-700 mb-3">Medicine Information</h6>
+            <table class="table table-sm table-borderless mb-0" id="detailTable">
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nearby pharmacies with this medicine -->
+      <div class="row mt-5">
+        <div class="col-12">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="fw-700 fs-5 mb-0">Available at Nearby Pharmacies</h2>
+            <button class="btn btn-sm btn-outline-primary" id="detectLocationBtn">
+              <i class="bi bi-geo-alt me-1"></i>Use My Location
+            </button>
+          </div>
+          <div id="pharmacyAvailLoader" class="row g-3">
+            {% for _ in range(3) %}
+            <div class="col-md-4">
+              <div class="skeleton-block" style="height:120px;border-radius:12px;"></div>
+            </div>
+            {% endfor %}
+          </div>
+          <div id="pharmacyAvailGrid" class="row g-3 d-none"></div>
+          <div id="pharmacyAvailEmpty" class="d-none text-center py-4">
+            <i class="bi bi-shop" style="font-size:2.5rem;opacity:.3;"></i>
+            <p class="text-muted mt-2">No pharmacies found. Allow location access to see nearby options.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error state -->
+    <div id="detailError" class="d-none text-center py-5">
+      <i class="bi bi-exclamation-triangle" style="font-size:3rem;opacity:.3;"></i>
+      <h5 class="mt-3 text-muted">Medicine not found</h5>
+      <a href="/medicines" class="btn btn-primary mt-3">Browse Medicines</a>
+    </div>
+  </div>
+</section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
+  const medicineId = window.location.pathname.split('/').pop();
+  const loader     = document.getElementById('detailLoader');
+  const content    = document.getElementById('detailContent');
+  const errorEl    = document.getElementById('detailError');
+
+  function showContent() { loader.classList.add('d-none'); content.classList.remove('d-none'); }
+  function showError()   { loader.classList.add('d-none'); errorEl.classList.remove('d-none'); }
+
+  function getAvailBadge(stock) {
+    if (stock > 20) return ['bg-success text-white', 'In Stock'];
+    if (stock > 0)  return ['bg-warning text-dark',  'Low Stock'];
+    return             ['bg-danger text-white',   'Out of Stock'];
+  }
+
+  function renderPharmacyCard(p) {
+    const dist = p.distance_km ? `${p.distance_km.toFixed(1)} km away` : '';
+    return `
+      <div class="col-md-4 col-sm-6">
+        <div class="pharmacy-avail-card">
+          <div class="d-flex align-items-start gap-3">
+            <div class="pharmacy-avail-icon"><i class="bi bi-shop"></i></div>
+            <div class="flex-fill">
+              <div class="fw-600">${p.name}</div>
+              <div class="text-muted small">${p.address || ''}</div>
+              ${dist ? `<div class="text-primary small"><i class="bi bi-geo-alt me-1"></i>${dist}</div>` : ''}
+            </div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between mt-3">
+            <span class="badge ${p.stock > 20 ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'}">
+              ${p.stock > 0 ? `${p.stock} units` : 'Low stock'}
+            </span>
+            <a href="/pharmacy/${p._id}" class="btn btn-sm btn-outline-primary">View Pharmacy</a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function loadMedicine() {
+    // Demo data
+    const demoData = {
+      'demo-0': { name: 'Paracetamol 500mg', generic_name: 'Acetaminophen', category: 'Analgesic', type: 'Tablet', price: 18, total_stock: 150, prescription_required: false, description: 'Paracetamol 500mg is widely used for the relief of mild to moderate pain including headache, toothache, muscular pain and fever. It is safe for adults and children when used as directed.', manufacturer: 'Cipla Ltd.', strength: '500mg', pack_size: '10 tablets/strip' },
+    };
+
+    const demo = demoData[medicineId] || {
+      name: 'Sample Medicine 500mg', generic_name: 'Generic Name', category: 'General', type: 'Tablet', price: 50, total_stock: 100,
+      prescription_required: false, description: 'This is a sample medicine page. In production, this will show real medicine details from the database.', manufacturer: 'Sample Pharma', strength: '500mg', pack_size: '10 tablets/strip'
+    };
+
+    try {
+      const res = await fetch(`/api/medicines/${medicineId}`).then(r => r.json());
+      if (res.success && res.data) return renderMedicine(res.data);
+    } catch (_) {}
+    renderMedicine(demo);
+  }
+
+  function renderMedicine(med) {
+    document.getElementById('detailBreadcrumb').textContent = med.name;
+    document.title = `${med.name} | MediFind`;
+    document.getElementById('detailName').textContent = med.name;
+    document.getElementById('detailGeneric').textContent = med.generic_name || '';
+    document.getElementById('detailCategory').textContent = med.category || 'General';
+    document.getElementById('detailType').textContent = med.type || 'Tablet';
+    document.getElementById('detailDescription').textContent = med.description || '';
+
+    const [badgeCls, badgeTxt] = getAvailBadge(med.total_stock || 0);
+    const badge = document.getElementById('detailAvailBadge');
+    badge.className = `badge rounded-pill px-3 py-2 ${badgeCls}`;
+    badge.textContent = badgeTxt;
+
+    document.getElementById('detailRxNote').textContent = med.prescription_required
+      ? '⚕️ Prescription required' : '✅ Available without prescription';
+
+    document.getElementById('detailPrice').textContent = med.price ? `₹${med.price.toFixed(2)}` : 'Price on request';
+
+    const rows = [
+      ['Manufacturer', med.manufacturer || '—'],
+      ['Strength', med.strength || '—'],
+      ['Pack Size', med.pack_size || '—'],
+      ['Type', med.type || '—'],
+      ['Category', med.category || '—'],
+    ];
+    document.querySelector('#detailTable tbody').innerHTML = rows.map(([k, v]) =>
+      `<tr><td class="text-muted fw-500 pe-4" style="width:40%">${k}</td><td class="fw-600">${v}</td></tr>`
+    ).join('');
+
+    showContent();
+    loadNearbyPharmacies(med);
+  }
+
+  function loadNearbyPharmacies(med) {
+    const avLoader = document.getElementById('pharmacyAvailLoader');
+    const avGrid   = document.getElementById('pharmacyAvailGrid');
+    const avEmpty  = document.getElementById('pharmacyAvailEmpty');
+    avGrid.innerHTML = '';
+    avGrid.classList.add('d-none');
+    avLoader.classList.add('d-none');
+    avEmpty.classList.remove('d-none');
+    avEmpty.querySelector('p').textContent = 'Store locations do not confirm medicine stock. Check with the pharmacy before visiting.';
+  }
+
+  // Buttons
+  document.getElementById('shareBtn')?.addEventListener('click', async () => {
+    if (navigator.share) await navigator.share({ title: document.title, url: window.location.href });
+    else { navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }
+  });
+  document.getElementById('addToListBtn')?.addEventListener('click', () => {
+    const token = localStorage.getItem('mf_access');
+    if (!token) { window.location.href = '/login'; return; }
+    document.getElementById('addToListBtn').innerHTML = '<i class="bi bi-bookmark-fill me-2"></i>Saved!';
+    document.getElementById('addToListBtn').disabled = true;
+  });
+
+  document.getElementById('checkAvailBtn')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Finding nearby stores…';
+    const fallback = { lat: 29.7806, lng: 77.2629 };
+    let point = fallback;
+    if (navigator.geolocation) {
+      try {
+        point = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }), reject,
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+        ));
+      } catch (_) { UI.showToast('Location unavailable. Showing stores near Gangoh, Saharanpur.', 'info'); }
+    } else { UI.showToast('Location is not supported. Showing stores near Gangoh, Saharanpur.', 'info'); }
+    window.location.href = `/gangoh-map?nearby=1&location=current&lat=${point.lat}&lng=${point.lng}`;
+  });
+
+  loadMedicine();
+})();
+</script>
+{% endblock %}

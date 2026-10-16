@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+{% block title %}Browse Medicines{% endblock %}
+{% block meta_description %}Search and browse thousands of medicines. Check real-time availability at nearby verified pharmacies on MediFind.{% endblock %}
+
+{% block content %}
+
+<!-- ── Page Header ──────────────────────────────────────────────────────── -->
+<section class="page-header-section" id="medicinesHeader">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <nav aria-label="breadcrumb" class="mb-2">
+          <ol class="breadcrumb mb-0" style="font-size:.85rem;">
+            <li class="breadcrumb-item"><a href="/" class="text-white opacity-75">Home</a></li>
+            <li class="breadcrumb-item active text-white">Medicines</li>
+          </ol>
+        </nav>
+        <h1 class="page-header-title">Browse Medicines</h1>
+        <p class="page-header-sub">10,000+ medicines from verified pharmacies near you</p>
+      </div>
+      <div class="col-lg-5 d-none d-lg-flex justify-content-end">
+        <div class="page-header-search">
+          <i class="bi bi-search me-2 text-muted"></i>
+          <input type="text" id="medicineSearchInput" class="page-search-input" placeholder="Search medicines…" autocomplete="off" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Main content ──────────────────────────────────────────────────────── -->
+<section class="py-5" id="medicineListSection">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- ── Sidebar Filters ─────────────────────────────────────────── -->
+      <aside class="col-lg-3 col-md-4" id="medicineFilters">
+        <div class="filter-card sticky-top" style="top:90px;">
+          <div class="filter-card-header d-flex justify-content-between align-items-center">
+            <span class="fw-600"><i class="bi bi-funnel me-2"></i>Filters</span>
+            <button class="btn btn-sm btn-link p-0 text-muted" id="clearFiltersBtn">Clear all</button>
+          </div>
+
+          <!-- Category -->
+          <div class="filter-section">
+            <div class="filter-section-title">Category</div>
+            <div class="filter-options" id="categoryFilters">
+              <label class="filter-option active">
+                <input type="radio" name="category" value="" checked class="d-none" /> All Categories
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="antibiotic" class="d-none" /> Antibiotics
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="analgesic" class="d-none" /> Analgesics
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="vitamin" class="d-none" /> Vitamins & Supplements
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="cardiovascular" class="d-none" /> Cardiovascular
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="diabetes" class="d-none" /> Diabetes
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="category" value="dermatology" class="d-none" /> Dermatology
+              </label>
+            </div>
+          </div>
+
+          <!-- Availability -->
+          <div class="filter-section">
+            <div class="filter-section-title">Availability</div>
+            <div class="filter-options" id="availFilters">
+              <label class="filter-option active">
+                <input type="radio" name="availability" value="" checked class="d-none" /> All
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="availability" value="in_stock" class="d-none" />
+                <span class="badge-dot bg-success me-1" style="width:7px;height:7px;border-radius:50%;display:inline-block;"></span>In Stock
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="availability" value="low_stock" class="d-none" />
+                <span class="badge-dot bg-warning me-1" style="width:7px;height:7px;border-radius:50%;display:inline-block;"></span>Low Stock
+              </label>
+            </div>
+          </div>
+
+          <!-- Type -->
+          <div class="filter-section">
+            <div class="filter-section-title">Medicine Type</div>
+            <div class="filter-options" id="typeFilters">
+              <label class="filter-option active">
+                <input type="radio" name="type" value="" checked class="d-none" /> All Types
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="type" value="tablet" class="d-none" /> Tablet / Capsule
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="type" value="syrup" class="d-none" /> Syrup / Liquid
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="type" value="injection" class="d-none" /> Injection
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="type" value="cream" class="d-none" /> Cream / Ointment
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="type" value="drops" class="d-none" /> Drops
+              </label>
+            </div>
+          </div>
+
+          <!-- Prescription required -->
+          <div class="filter-section border-0">
+            <div class="filter-section-title">Prescription</div>
+            <div class="filter-options">
+              <label class="filter-option active">
+                <input type="radio" name="prescription" value="" checked class="d-none" /> All
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="prescription" value="no" class="d-none" /> OTC (No prescription)
+              </label>
+              <label class="filter-option">
+                <input type="radio" name="prescription" value="yes" class="d-none" /> Prescription required
+              </label>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ── Results ─────────────────────────────────────────────────── -->
+      <div class="col-lg-9 col-md-8">
+
+        <!-- Toolbar -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+          <!-- Mobile search -->
+          <div class="d-md-none flex-fill">
+            <div class="auth-input-wrap">
+              <i class="bi bi-search auth-input-icon"></i>
+              <input type="text" id="medicineSearchMobile" class="auth-input form-control" placeholder="Search medicines…" />
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <span class="text-muted small" id="resultCount">Loading…</span>
+            <select class="form-select form-select-sm" id="sortSelect" style="width:auto;min-width:160px;">
+              <option value="name_asc">Name A-Z</option>
+              <option value="name_desc">Name Z-A</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
+
+            <!-- View toggle -->
+            <div class="btn-group btn-group-sm" role="group" aria-label="View mode">
+              <button type="button" class="btn btn-outline-secondary active" id="gridViewBtn" aria-label="Grid view">
+                <i class="bi bi-grid-3x3-gap"></i>
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="listViewBtn" aria-label="List view">
+                <i class="bi bi-list-ul"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid loader -->
+        <div id="medicineLoader" class="row g-3">
+          {% for _ in range(9) %}
+          <div class="col-xl-4 col-sm-6">
+            <div class="card border-0 rounded-3 p-3 skeleton-card">
+              <div class="skeleton-block mb-3" style="height:140px;border-radius:12px;"></div>
+              <div class="skeleton-block mb-2" style="height:14px;width:70%;"></div>
+              <div class="skeleton-block mb-2" style="height:12px;width:50%;"></div>
+              <div class="skeleton-block" style="height:36px;border-radius:8px;"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Actual grid -->
+        <div id="medicineGrid" class="row g-3 d-none"></div>
+
+        <!-- Empty state -->
+        <div id="medicineEmpty" class="d-none text-center py-5">
+          <i class="bi bi-capsule" style="font-size:3.5rem;color:var(--clr-primary);opacity:.3;"></i>
+          <h5 class="mt-3 text-muted">No medicines found</h5>
+          <p class="text-muted small">Try adjusting your search or filters.</p>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-center mt-5">
+          <nav aria-label="Medicine pages">
+            <ul class="pagination" id="medicinePagination"></ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  'use strict';
+
+  /* ── State ─────────────────────────────────────────────────────────── */
+  let currentPage = 1;
+  let currentFilters = { category: '', availability: '', type: '', prescription: '' };
+  let currentSort = 'name_asc';
+  let searchQuery = '';
+  let viewMode = 'grid';
+  let debounceTimer;
+
+  /* ── DOM refs ────────────────────────────────────────────────────── */
+  const grid      = document.getElementById('medicineGrid');
+  const loader    = document.getElementById('medicineLoader');
+  const emptyEl   = document.getElementById('medicineEmpty');
+  const countEl   = document.getElementById('resultCount');
+  const pagination= document.getElementById('medicinePagination');
+
+  /* ── Helpers ─────────────────────────────────────────────────────── */
+  function showLoader() { loader.classList.remove('d-none'); grid.classList.add('d-none'); emptyEl.classList.add('d-none'); }
+  function showGrid()   { loader.classList.add('d-none');    grid.classList.remove('d-none'); emptyEl.classList.add('d-none'); }
+  function showEmpty()  { loader.classList.add('d-none');    grid.classList.add('d-none');    emptyEl.classList.remove('d-none'); }
+
+  function getAvailBadge(stock) {
+    if (stock > 20) return '<span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>In Stock</span>';
+    if (stock > 0)  return '<span class="badge bg-warning-subtle text-warning"><i class="bi bi-exclamation-circle me-1"></i>Low Stock</span>';
+    return '<span class="badge bg-danger-subtle text-danger"><i class="bi bi-x-circle me-1"></i>Out of Stock</span>';
+  }
+
+  function getMedicineCard(med) {
+    const rxBadge = med.prescription_required
+      ? '<span class="badge bg-primary-subtle text-primary ms-1"><i class="bi bi-file-medical me-1"></i>Rx</span>' : '';
+    return `
+      <div class="col-xl-4 col-sm-6">
+        <div class="medicine-card" data-id="${med._id}" role="article">
+          <div class="medicine-card-img-wrap">
+            <div class="medicine-card-icon"><i class="bi bi-capsule-pill"></i></div>
+            <div class="medicine-card-badges">
+              ${getAvailBadge(med.total_stock || 0)}
+              ${rxBadge}
+            </div>
+          </div>
+          <div class="medicine-card-body">
+            <div class="medicine-card-category text-muted small text-uppercase">${med.category || 'General'}</div>
+            <h3 class="medicine-card-name">${med.name}</h3>
+            <p class="medicine-card-generic text-muted small">${med.generic_name || ''}</p>
+            <div class="d-flex align-items-center justify-content-between mt-auto pt-2">
+              <div class="medicine-card-price">
+                ${med.price ? `<span class="fw-700">₹${med.price.toFixed(2)}</span>` : '<span class="text-muted small">Price varies</span>'}
+              </div>
+              <a href="/medicine/${med._id}" class="btn btn-primary btn-sm medicine-card-btn">
+                <i class="bi bi-eye me-1"></i>View Details
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /* ── Fetch ─────────────────────────────────────────────────────────── */
+  async function fetchMedicines() {
+    showLoader();
+    const params = new URLSearchParams({ page: currentPage, limit: 12, sort: currentSort });
+    if (searchQuery) params.set('q', searchQuery);
+    Object.entries(currentFilters).forEach(([k, v]) => { if (v) params.set(k, v); });
+
+    try {
+      const res  = await fetch(`/api/medicines?${params}`).then(r => r.json());
+      const meds = res.data || res.medicines || [];
+      const total= res.total || meds.length;
+      const pages= res.pages || Math.ceil(total / 12);
+
+      countEl.textContent = `${total} medicine${total !== 1 ? 's' : ''} found`;
+
+      if (!meds.length) { showEmpty(); renderPagination(0, 0); return; }
+
+      grid.innerHTML = meds.map(getMedicineCard).join('');
+      showGrid();
+      renderPagination(pages, currentPage);
+    } catch (e) {
+      // Demo fallback
+      const demo = generateDemoMedicines();
+      grid.innerHTML = demo.map(getMedicineCard).join('');
+      countEl.textContent = `${demo.length} medicines found (demo)`;
+      showGrid();
+      renderPagination(3, 1);
+    }
+  }
+
+  function generateDemoMedicines() {
+    const names = [
+      { name: 'Paracetamol 500mg', generic: 'Acetaminophen', cat: 'Analgesic', price: 18, stock: 150, rx: false },
+      { name: 'Amoxicillin 250mg', generic: 'Amoxicillin trihydrate', cat: 'Antibiotic', price: 85, stock: 45, rx: true },
+      { name: 'Cetirizine 10mg',   generic: 'Cetirizine HCl', cat: 'Antihistamine', price: 32, stock: 200, rx: false },
+      { name: 'Metformin 500mg',   generic: 'Metformin HCl', cat: 'Diabetes', price: 55, stock: 0,  rx: true },
+      { name: 'Atorvastatin 10mg', generic: 'Atorvastatin calcium', cat: 'Cardiovascular', price: 120, stock: 80, rx: true },
+      { name: 'Omeprazole 20mg',   generic: 'Omeprazole', cat: 'Gastro', price: 48, stock: 12, rx: false },
+      { name: 'Vitamin D3 1000IU', generic: 'Cholecalciferol', cat: 'Vitamin', price: 220, stock: 500, rx: false },
+      { name: 'Azithromycin 500mg',generic: 'Azithromycin', cat: 'Antibiotic', price: 95, stock: 30, rx: true },
+      { name: 'Ibuprofen 400mg',   generic: 'Ibuprofen', cat: 'Analgesic', price: 25, stock: 300, rx: false },
+    ];
+    return names.map((m, i) => ({ _id: `demo-${i}`, ...m, total_stock: m.stock, category: m.cat, generic_name: m.generic, prescription_required: m.rx }));
+  }
+
+  /* ── Pagination ────────────────────────────────────────────────────── */
+  function renderPagination(pages, page) {
+    if (pages <= 1) { pagination.innerHTML = ''; return; }
+    let html = '';
+    if (page > 1) html += `<li class="page-item"><a class="page-link" href="#" data-p="${page - 1}">‹</a></li>`;
+    for (let i = 1; i <= pages; i++) {
+      html += `<li class="page-item ${i === page ? 'active' : ''}"><a class="page-link" href="#" data-p="${i}">${i}</a></li>`;
+    }
+    if (page < pages) html += `<li class="page-item"><a class="page-link" href="#" data-p="${page + 1}">›</a></li>`;
+    pagination.innerHTML = html;
+    pagination.querySelectorAll('.page-link').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); currentPage = +a.dataset.p; fetchMedicines(); window.scrollTo({top:0,behavior:'smooth'}); });
+    });
+  }
+
+  /* ── Event listeners ────────────────────────────────────────────────── */
+  // Search
+  function onSearch(val) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => { searchQuery = val; currentPage = 1; fetchMedicines(); }, 400);
+  }
+  document.getElementById('medicineSearchInput')?.addEventListener('input', e => onSearch(e.target.value));
+  document.getElementById('medicineSearchMobile')?.addEventListener('input', e => onSearch(e.target.value));
+
+  // Filters
+  document.querySelectorAll('input[type=radio]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const parent = radio.closest('.filter-options');
+      parent?.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+      radio.closest('.filter-option')?.classList.add('active');
+      currentFilters[radio.name] = radio.value;
+      currentPage = 1;
+      fetchMedicines();
+    });
+  });
+
+  // Sort
+  document.getElementById('sortSelect')?.addEventListener('change', e => { currentSort = e.target.value; fetchMedicines(); });
+
+  // View toggle
+  document.getElementById('gridViewBtn')?.addEventListener('click', () => {
+    viewMode = 'grid';
+    document.getElementById('gridViewBtn').classList.add('active');
+    document.getElementById('listViewBtn').classList.remove('active');
+    grid.className = 'row g-3';
+  });
+  document.getElementById('listViewBtn')?.addEventListener('click', () => {
+    viewMode = 'list';
+    document.getElementById('listViewBtn').classList.add('active');
+    document.getElementById('gridViewBtn').classList.remove('active');
+    grid.className = 'row g-2';
+  });
+
+  // Clear filters
+  document.getElementById('clearFiltersBtn')?.addEventListener('click', () => {
+    currentFilters = { category: '', availability: '', type: '', prescription: '' };
+    document.querySelectorAll('input[type=radio][value=""]').forEach(r => { r.checked = true; r.closest('.filter-option')?.classList.add('active'); });
+    document.querySelectorAll('.filter-option:not(:first-child)').forEach(o => o.classList.remove('active'));
+    searchQuery = ''; currentPage = 1;
+    fetchMedicines();
+  });
+
+  // Init
+  fetchMedicines();
+})();
+</script>
+{% endblock %}

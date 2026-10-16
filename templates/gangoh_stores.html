@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Gangoh Medical Stores | MediFind{% endblock %}
+{% block meta_description %}Search the medical-store directory for Gangoh, Saharanpur, Uttar Pradesh.{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<style>
+.directory-hero{padding:2rem 0;background:linear-gradient(135deg,#164e63,#0d9488);color:#fff}.directory-layout{display:grid;grid-template-columns:minmax(280px,370px) 1fr;min-height:65vh}.directory-sidebar{background:#fff;border:1px solid #e2e8f0;padding:1rem;overflow:auto}.directory-row{padding:.8rem;border:1px solid #e2e8f0;border-radius:10px;margin:.5rem 0;cursor:pointer}.directory-row:hover{background:#f0fdfa}.store-name{font-weight:700}.store-meta{font-size:.82rem;color:#64748b}#directoryMap{min-height:520px}.status-pill{font-size:.72rem;border-radius:99px;padding:.2rem .55rem;background:#fef3c7;color:#92400e}.status-pill.verified{background:#d1fae5;color:#065f46}@media(max-width:800px){.directory-layout{grid-template-columns:1fr}#directoryMap{min-height:380px}}
+</style>
+{% endblock %}
+{% block content %}
+<section class="directory-hero"><div class="container"><h1 class="h3 mb-1">Gangoh Medical Stores</h1><p class="mb-0">Gangoh, Saharanpur, Uttar Pradesh · Permanent local directory</p></div></section>
+<main class="directory-layout">
+  <aside class="directory-sidebar">
+    <label for="storeQuery" class="form-label fw-semibold">Search stores</label>
+    <div class="input-group"><input id="storeQuery" class="form-control" placeholder="Name or address"><button id="searchStores" class="btn btn-primary">Search</button></div>
+    <p class="small text-muted mt-2 mb-2">Only confirmed details are marked verified. Missing phone, location, or hours are left blank.</p>
+    <div id="storeStatus" class="small text-muted py-2" role="status">Loading…</div><div id="storeList"></div>
+  </aside>
+  <div id="directoryMap" aria-label="Map of Gangoh medical stores"></div>
+</main>
+{% endblock %}
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(() => {
+  const center=[29.7833,77.3083], map=L.map('directoryMap').setView(center,14), layer=L.layerGroup().addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function load(){const q=document.getElementById('storeQuery').value.trim();const status=document.getElementById('storeStatus');status.textContent='Loading…';try{const r=await fetch('/api/medical-stores/?q='+encodeURIComponent(q));const j=await r.json();if(!r.ok)throw new Error(j.message||'Could not load directory.');const rows=j.data.stores;status.textContent=`${rows.length} store${rows.length===1?'':'s'} in Gangoh`;layer.clearLayers();document.getElementById('storeList').innerHTML=rows.map((s,i)=>{const pin=Number.isFinite(s.latitude)&&Number.isFinite(s.longitude);const marker=pin?L.marker([s.latitude,s.longitude]).addTo(layer):null;const badge=`<span class="status-pill ${s.verified?'verified':''}">${s.verified?'Verified':'Unverified'}</span>`;const details=[s.address,s.phone,s.opening_hours,s.source?`Source: ${s.source}`:null].filter(Boolean).map(esc).join(' · ');if(marker)marker.bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.address)}${s.verified?'':'<br><small>Details not confirmed</small>'}<br><small>Source: ${esc(s.source||'unspecified')}</small>`);return `<article class="directory-row" data-index="${i}"><div class="store-name">${esc(s.name)} ${badge}</div><div class="store-meta">${details||'No additional details listed'}</div></article>`}).join('');document.querySelectorAll('.directory-row').forEach(el=>el.addEventListener('click',()=>{const s=rows[Number(el.dataset.index)];if(Number.isFinite(s.latitude)&&Number.isFinite(s.longitude))map.setView([s.latitude,s.longitude],17)}));if(rows.length){const points=rows.filter(s=>Number.isFinite(s.latitude)&&Number.isFinite(s.longitude)).map(s=>[s.latitude,s.longitude]);if(points.length)map.fitBounds(points,{padding:[25,25],maxZoom:15})}}catch(e){status.textContent=e.message}}
+  document.getElementById('searchStores').addEventListener('click',load);document.getElementById('storeQuery').addEventListener('keydown',e=>{if(e.key==='Enter')load()});load();
+})();
+</script>
+{% endblock %}
