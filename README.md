@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MediFind — Medicine Availability & Pharmacy Network
 
 > A production-ready full-stack web platform connecting patients with nearby pharmacies through real-time medicine availability, inventory management, and seamless reservations.
@@ -314,3 +315,6 @@ MONGO_URI=<mongodb-atlas-uri>
 ---
 
 *MediFind — Connecting Patients with Pharmacies*
+=======
+# medicine
+>>>>>>> 6bf332fc7719001e30a62631aa9ddb6ab223be39
